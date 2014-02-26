@@ -5,13 +5,17 @@ Documenting our work here.  Goal is to write ruby scripts to automate some of th
 
 ## Installing and Configuring Mongo
 
-download and unzip to applications folder
-symlink from usr/bin to applications/mongodb/bin the following: mongod, mongo, mongoimport, mongoexport
+- download from: http://www.mongodb.org/downloads 
+- unzip to applications folder
+- symlink from usr/bin to applications/mongodb/bin the following: mongod, mongo, mongoimport, mongoexport
+
+
+- For full instructions on OSX see: http://docs.mongodb.org/manual/tutorial/install-mongodb-on-os-x/ 
 
 ## Getting History Data
 
-Grab .pbf files from: http://osm.personalwerk.de/full-history-extracts/latest/ 
-rename file extension from .osh.pbf to .osm.pbf
+- Grab .pbf files from: http://osm.personalwerk.de/full-history-extracts/latest/ 
+- rename file extension from .osh.pbf to .osm.pbf
 
 ## Importing Data into Mongo
 
