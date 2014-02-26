@@ -1,6 +1,15 @@
 '''
 PBF Parser from: https://github.com/planas/pbf_parser
+
+//These two are for MongoDB:
+gem install mongo
+gem install bson_ext
+
+//These two are for parsing PBF:
+brew install protobuf-c
+gem install pbf_parser
 '''
+
 
 require 'pbf_parser'
 require 'mongo'
@@ -35,8 +44,7 @@ def parse_test
 			r_count+= parser.relations.size
 		end
 	end
-puts "Nodes: #{n_count}, Ways: #{w_count}, Rels: #{r_count}"
-
+	puts "Nodes: #{n_count}, Ways: #{w_count}, Rels: #{r_count}"
 end
 
 '''
