@@ -10,18 +10,40 @@ brew install protobuf-c
 gem install pbf_parser
 '''
 
-
 require 'pbf_parser'
 require 'mongo'
 
-def connect_to_mongo
-	client = Mongo::MongoClient.new
-	db = client['example-db'] 
-	coll = db['example-collection']
+class OSMGeoJSONMongo
+
+	def initialize(db='example-db', collection='example-collection')
+		begin
+			client = Mongo::MongoClient.new
+			db = client[db]
+			coll = db[collection]
+		rescue
+			puts "Oops, unable to connect to client -- is it running?"
+		end
+	end
+	
+	
+	
 	10.times { |i| coll.insert({ :count => i+1 }) }
 	puts "There are #{coll.count} total documents. Here they are:"
 	coll.find.each { |doc| puts doc.inspect }
+
+	return coll
 end
+
+def addPoint(coll)
+	10.times { |i|
+		coll.insert({geo:{:type:Point}})
+
+	}
+
+end
+
+
+
 
 connect_to_mongo
 
