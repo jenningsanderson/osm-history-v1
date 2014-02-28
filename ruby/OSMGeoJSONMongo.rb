@@ -16,7 +16,7 @@ class OSMGeoJSONMongo
 
 	attr_reader :parser
 	
-	def initialize(db='example-db', collection='example')
+	def initialize(db='example-db', collection='osm-test') #This would be a particular area that we import.
 		begin
 			client = Mongo::MongoClient.new
 			db = client[db]
@@ -60,6 +60,10 @@ class OSMGeoJSONMongo
 
 		#TODO: If geo, it will have to loop through the refs and access
 		# the lat/lon for each node... yikes!
+
+		# -- Still only important if we need the geo-spatial ref -- do we?
+
+
 		return @coll.insert(this_line)
 	end
 
@@ -77,6 +81,9 @@ class OSMGeoJSONMongo
 		this_relation[:properties]=relation
 		#TODO: If geo, it will have to loop through the refs and access
 		# the lat/lon for each node... yikes
+
+		# -- But that is really only important if we NEED the geo-spatial refs
+
 		return @coll.insert(this_relation)
 	end
 end
