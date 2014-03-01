@@ -8,6 +8,13 @@ gem install bson_ext
 //These two are for parsing PBF:
 brew install protobuf-c
 gem install pbf_parser
+
+//General Info:
+With the size of this data, it should be more efficient to store everything
+together so we get a better idea and embed the references in each way, relation
+... We could potentially end up with an issue with duplicates if we try to update
+an area, but we could filter based on unique changesets -- as well as rely on
+official history files and simply drop the table whenever.
 '''
 
 class OSMGeoJSONMongo
@@ -16,11 +23,12 @@ class OSMGeoJSONMongo
 
 	attr_reader :parser
 	
-	def initialize(db='example-db', collection='osm-test') #This would be a particular area that we import.
+	def initialize(database='osmtestdb', collection='boulder_denver') #This would be a particular area that we import.
 		begin
 			client = Mongo::MongoClient.new
-			db = client[db]
+			db = client[database]
 			@coll = db[collection]
+			puts "Successfully connected to #{database}.#{collection}"
 		rescue
 			puts "Oops, unable to connect to client -- is it running?"
 		end
@@ -63,6 +71,11 @@ class OSMGeoJSONMongo
 
 		# -- Still only important if we need the geo-spatial ref -- do we?
 
+		if geo
+			way[:refs].each do |node|
+				lat,long = @coll.find({'properties.id': way[:id]},{_id:0,})
+				 d.find({'properties.id': 25676629},{_id:0,'geometry.coordinates':1})
+
 
 		return @coll.insert(this_line)
 	end
@@ -93,9 +106,9 @@ def parse_test(conn)
 	w_count=0
 	while conn.parser.next
 		# unless conn.parser.nodes.empty?
-		# 	conn.parser.nodes.each do |node|
-		# 		conn.addPoint(node)
-		# 	end
+		#  	conn.parser.nodes.each do |node|
+		#  		conn.addPoint(node)
+		#  	end
 		# end
 		unless conn.parser.ways.empty?
 			w_count+= 1
