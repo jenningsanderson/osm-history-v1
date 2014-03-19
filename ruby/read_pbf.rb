@@ -32,20 +32,25 @@ def file_stats(file)
 end
 
 if __FILE__==$0
-	#Create connection
-	conn = OSMGeoJSONMongo.new() #Defaults
+	if ARGV[0].nil?
+		puts "Call this in the following manner: "
+		puts "\truby read_pbf.rb [database name] [pbf file]"
+	else
+		db = ARGV[0]
+		file = ARGV[1]
 
-	file = ARGV[0]
+		if db=="nepal"
+			file = '/Users/jenningsanderson/Downloads/nepal.osm.pbf'
+		end
 
-	if file=="nepal"
-		file = '/Users/jenningsanderson/Downloads/nepal.osm.pbf'
+		#Create connection
+		conn = OSMGeoJSONMongo.new(database=db) #Defaults
+
+		puts "Information about your file: "
+		file_stats(file)
+
+		parser = conn.Parser(file)
+		read_pbf_to_mongo(conn)
+		puts "Missing node count: #{conn.missing_nodes}"
 	end
-
-	puts "Information about your file: "
-	file_stats(file)
-
-	parser = conn.Parser(file)
-	read_pbf_to_mongo(conn)
-	puts "Missing node count: #{conn.missing_nodes}"
-
 end
