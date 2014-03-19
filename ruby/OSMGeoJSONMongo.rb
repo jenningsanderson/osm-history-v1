@@ -24,6 +24,7 @@ class OSMGeoJSONMongo
 
 	require 'mongo'
 	require 'pbf_parser'
+	require 'date'
 
 	attr_reader :parser, :missing_nodes, :n_count, :w_count, :r_count, :file
 
@@ -54,6 +55,7 @@ class OSMGeoJSONMongo
 
 	def addPoint(node)
 		this_node = {}
+		this_node[:date] = Time.at(node[:timestamp]/1000).utc
 		this_node[:id] = node[:id]
 		this_node[:geometry]={:type=>'Point', :coordinates=>[node[:lon],node[:lat]]} #Critical to swap these
 		this_node[:type]="Feature"
@@ -63,6 +65,7 @@ class OSMGeoJSONMongo
 
 	def addLine(way, geo_capture=false)
 		this_line = {}
+		this_line[:date] = Time.at(way[:timestamp]/1000).utc
 		if way[:refs][0] == way[:refs][-1]
 			#Not a foolproof test -- but not enough data to tell...
 			this_line[:geometry]={:type=>"Polygon",:coordinates=>[]}
@@ -162,7 +165,15 @@ class OSMGeoJSONMongo
 						addLine(way, geo_capture=true)
 						index += 1
 					rescue
-						puts way.inspect
+						p $!
+						begin
+							way["tags"].each do |k,v|
+								k.gsub!('.','_')
+							end
+							addLine(way, geo_capture=true)
+						rescue
+							next
+						end
 					end
 					if index%1000==0
 						puts "Processed #{index} of #{@w_count} ways"
