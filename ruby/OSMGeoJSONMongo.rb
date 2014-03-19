@@ -20,12 +20,12 @@ official history files and simply drop the table whenever.
 require 'pp'
 
 class OSMGeoJSONMongo
-
 	''' Is there something amuck with the timestamp?'''
+
 	require 'mongo'
 	require 'pbf_parser'
 
-	attr_reader :parser, :missing_nodes
+	attr_reader :parser, :missing_nodes, :n_count, :w_count, :r_count, :file
 
 	def initialize(database='osmtestdb') #This would be a particular area that we import.
 		begin
@@ -44,7 +44,12 @@ class OSMGeoJSONMongo
 	end
 
 	def Parser(file)
+		@file = file
 		@parser = PbfParser.new(file)
+	end
+
+	def reset_parser
+		@parser = PbfParser.new(@file)
 	end
 
 	def addPoint(node)
@@ -94,27 +99,62 @@ class OSMGeoJSONMongo
 
 		return @rels.insert(this_relation)
 	end
-end
 
-
-def read_pbf_to_mongo(conn)
-	while conn.parser.next
-		unless conn.parser.nodes.empty?
-			conn.parser.nodes.each do |node|
-				conn.addPoint(node)
+	def file_stats
+		test_parser = PbfParser.new(@file)
+		@n_count = 0
+		@w_count = 0
+		@r_count = 0
+		while test_parser.next
+			unless test_parser.nodes.empty?
+				@n_count+= test_parser.nodes.size
+			end
+			unless test_parser.ways.empty?
+				@w_count+= test_parser.ways.size
+			end
+			unless test_parser.relations.empty?
+				@r_count+= test_parser.relations.size
 			end
 		end
-		unless conn.parser.ways.empty?
-			conn.parser.ways.each do |way|
-				conn.addLine(way, geo_capture=true)
-			end
-		end
-		#unless parser.relations.empty?
-		#	r_count+= parser.relations.size
-		#end
+		puts "Nodes: #{@n_count}, Ways: #{@w_count}, Relations: #{@r_count}"
 	end
-	puts "Missing node count: #{conn.missing_nodes}"
-end
+
+	def read_pbf_to_mongo
+		#First do nodes
+		index = 0
+		while @parser.next
+			unless @parser.nodes.nil?
+				@parser.nodes.each do |node|
+					addPoint(node)
+					index += 1
+					if index%10000==0
+						puts "Processed #{index} of #{@n_count} nodes"
+					end
+				end
+			end
+		end
+
+		#Ensure the index so that it goes a little faster...
+		@nodes.ensure_index(:id => 1)
+
+		reset_parser #Reset the parser because 'seek' does not work
+
+
+		index = 0
+		while @parser.next
+			unless @parser.ways.nil?
+				@parser.ways.each do |way|
+					addLine(way, geo_capture=true)
+					index += 1
+					if index%10000==0
+						puts "Processed #{index} of #{@w_count} ways"
+					end
+				end
+			end
+		end
+		puts "Missing node count: #{missing_nodes}"
+	end
+end #class
 
 
 if __FILE__==$0
@@ -122,7 +162,5 @@ if __FILE__==$0
 	file = ARGV[0]
 	parser = conn.Parser(file)
 
-	#conn.addPoint(parser.nodes.first())
-	#conn.addLine(parser.ways.first())
-	read_pbf_to_mongo(conn)
+	conn.read_pbf_to_mongo
 end
