@@ -30,7 +30,7 @@ Documenting our work here.  Goal is to write ruby scripts to automate some of th
 - Note that Osmium has a number of dependencies required for the software to work.  See the project readme for details
 - Now you can set up osm-history-splitter: git clone https://github.com/MaZderMind/osm-history-splitter 
 - There are a number of options for getting the bounding box (geographic extents) for the area you are interested in.  Easy option is to visit: http://boundingbox.klokantech.com/ 
-- Follow the directions in the OSM History Splitter tool to clip your file
+- Follow the directions in the OSM History Splitter tool to create your settings file clip your data to just the bounding box specified
 
 ## Importing Data into Mongo
 
