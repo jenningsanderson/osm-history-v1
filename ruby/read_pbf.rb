@@ -23,7 +23,7 @@ class OSMGeoJSONMongo
 			puts "Oops, unable to connect to client -- is it running?"
 		end
 	end
-	
+
 	def addPoint()
 
 	end
@@ -67,7 +67,7 @@ end
 TODO: Intelligently convert nodes to points, ways to lines, and relations
 to polygons
 
-Create these fields and then push the file to MongoDB.  From there we 
+Create these fields and then push the file to MongoDB.  From there we
 can make spatial queries
 '''
 
