@@ -119,7 +119,7 @@ end
 
 if __FILE__==$0
 	conn = OSMGeoJSONMongo.new() #Defaults
-	file = ARGV[1]
+	file = ARGV[0]
 	parser = conn.Parser(file)
 
 	#conn.addPoint(parser.nodes.first())
