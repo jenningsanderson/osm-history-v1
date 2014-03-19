@@ -139,14 +139,13 @@ class OSMGeoJSONMongo
 
 		reset_parser #Reset the parser because 'seek' does not work
 
-
 		index = 0
 		while @parser.next
 			unless @parser.ways.nil?
 				@parser.ways.each do |way|
 					addLine(way, geo_capture=true)
 					index += 1
-					if index%10000==0
+					if index%1000==0
 						puts "Processed #{index} of #{@w_count} ways"
 					end
 				end
