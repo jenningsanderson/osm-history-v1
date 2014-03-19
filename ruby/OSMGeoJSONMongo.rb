@@ -119,7 +119,8 @@ end
 
 if __FILE__==$0
 	conn = OSMGeoJSONMongo.new() #Defaults
-	parser = conn.Parser("/Users/jenningsanderson/Downloads/honolulu.osm.pbf")
+	file = ARGV[1]
+	parser = conn.Parser(file)
 
 	#conn.addPoint(parser.nodes.first())
 	#conn.addLine(parser.ways.first())
