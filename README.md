@@ -3,6 +3,8 @@ OSM-History
 
 Documenting our work here.  Goal is to write ruby scripts to automate some of this.  In the meantime we can document individual steps.
 
+Useful tutorial: https://github.com/MaZderMind/osm-history-renderer/blob/master/TUTORIAL.md 
+
 ## Installing and Configuring Mongo
 
 - download from: http://www.mongodb.org/downloads
@@ -22,18 +24,19 @@ Documenting our work here.  Goal is to write ruby scripts to automate some of th
 ## Getting History Data
 
 - Grab .pbf files for area of interest from: http://osm.personalwerk.de/full-history-extracts/latest/
-- rename file extension from .osh.pbf to .osm.pbf
 
 ## Clipping Data to Just Your Area of Interest
 
 - This process depends on having the Osmium Framework - git clone https://github.com/osmcode/libosmium - and OSM Binary - git clone https://github.com/scrosby/OSM-binary - installed  
 - Note that Osmium has a number of dependencies required for the software to work.  See the project readme for details
+- If you're getting error messages installing Osmium on Mac, see this: https://gist.github.com/tmcw/7223147 
 - Now you can set up osm-history-splitter: git clone https://github.com/MaZderMind/osm-history-splitter 
 - There are a number of options for getting the bounding box (geographic extents) for the area you are interested in.  Easy option is to visit: http://boundingbox.klokantech.com/ 
 - Follow the directions in the OSM History Splitter tool to create your settings file clip your data to just the bounding box specified
 
 ## Importing Data into Mongo
 
+- rename file extension from .osh.pbf to .osm.pbf
 - create a new collection -
 - import your data -
 
