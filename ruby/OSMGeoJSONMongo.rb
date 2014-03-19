@@ -125,8 +125,13 @@ class OSMGeoJSONMongo
 		while @parser.next
 			unless @parser.nodes.nil?
 				@parser.nodes.each do |node|
-					addPoint(node)
-					index += 1
+					begin
+						addPoint(node)
+						index += 1
+					rescue
+						puts "Error has occured -- Ignoring"
+						next
+					end
 					if index%10000==0
 						puts "Processed #{index} of #{@n_count} nodes"
 					end
@@ -146,8 +151,12 @@ class OSMGeoJSONMongo
 		while @parser.next
 			unless @parser.ways.nil?
 				@parser.ways.each do |way|
-					addLine(way, geo_capture=true)
-					index += 1
+					begin
+						addLine(way, geo_capture=true)
+						index += 1
+					rescue
+						puts "Error has occured -- Ignoring"
+					end
 					if index%1000==0
 						puts "Processed #{index} of #{@w_count} ways"
 					end
