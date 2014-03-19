@@ -1,11 +1,11 @@
-osm-history
+OSM-History
 ===========
 
 Documenting our work here.  Goal is to write ruby scripts to automate some of this.  In the meantime we can document individual steps.
 
 ## Installing and Configuring Mongo
 
-- download from: http://www.mongodb.org/downloads 
+- download from: http://www.mongodb.org/downloads
 - unzip to applications folder
 - symlink from usr/bin to applications/mongodb/bin the following: mongod, mongo, mongoimport, mongoexport
 - For full instructions on gettings started OSX see: http://docs.mongodb.org/manual/tutorial/install-mongodb-on-os-x/ 
@@ -17,10 +17,11 @@ Documenting our work here.  Goal is to write ruby scripts to automate some of th
 - gem install  mongo
 - gem install  pbf_parser
 - gem install  bson_ext
+- For full instructions on OSX see: http://docs.mongodb.org/manual/tutorial/install-mongodb-on-os-x/
 
 ## Getting History Data
 
-- Grab .pbf files for area of interest from: http://osm.personalwerk.de/full-history-extracts/latest/ 
+- Grab .pbf files for area of interest from: http://osm.personalwerk.de/full-history-extracts/latest/
 - rename file extension from .osh.pbf to .osm.pbf
 
 ## Clipping Data to Just Your Area of Interest
@@ -33,12 +34,12 @@ Documenting our work here.  Goal is to write ruby scripts to automate some of th
 
 ## Importing Data into Mongo
 
-
-
+- create a new collection -
+- import your data -
 
 ## Basic Queries
 
-- changesets by user 
+- changesets by user
 - changesets by time
 - objects by user
 - objects by time
@@ -51,5 +52,4 @@ Documenting our work here.  Goal is to write ruby scripts to automate some of th
 
 ## Grabbing User Data
 
-Overpass?
-
+Overpass
