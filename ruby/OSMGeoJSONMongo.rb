@@ -129,8 +129,15 @@ class OSMGeoJSONMongo
 						addPoint(node)
 						index += 1
 					rescue
-						puts "Error has occured -- Ignoring"
-						next
+						p $!
+						begin
+							node["tags"].each do |k,v|
+								k.gsub!('.','_')
+							end
+							addPoint(node)
+						rescue
+							next
+						end
 					end
 					if index%10000==0
 						puts "Processed #{index} of #{@n_count} nodes"
@@ -155,7 +162,7 @@ class OSMGeoJSONMongo
 						addLine(way, geo_capture=true)
 						index += 1
 					rescue
-						puts "Error has occured -- Ignoring"
+						puts way.inspect
 					end
 					if index%1000==0
 						puts "Processed #{index} of #{@w_count} ways"
