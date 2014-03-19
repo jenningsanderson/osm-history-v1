@@ -135,10 +135,13 @@ class OSMGeoJSONMongo
 		end
 
 		#Ensure the index so that it goes a little faster...
+		puts "Adding Index to the id field"
 		@nodes.ensure_index(:id => 1)
 
+		puts "Resetting the Parser"
 		reset_parser #Reset the parser because 'seek' does not work
 
+		puts "Importing Ways"
 		index = 0
 		while @parser.next
 			unless @parser.ways.nil?

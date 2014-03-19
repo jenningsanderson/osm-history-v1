@@ -34,6 +34,5 @@ if __FILE__==$0
 
 		puts "Beginning Mongo Import"
 		conn.read_pbf_to_mongo
-		puts "Missing node count: #{conn.missing_nodes}"
 	end
 end
