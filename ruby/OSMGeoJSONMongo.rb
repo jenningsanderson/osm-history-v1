@@ -22,7 +22,7 @@ class OSMGeoJSONMongo
 	require 'pbf_parser'
 
 	attr_reader :parser
-	
+
 	def initialize(database='osmtestdb', collection='boulder_denver') #This would be a particular area that we import.
 		begin
 			client = Mongo::MongoClient.new
@@ -37,14 +37,14 @@ class OSMGeoJSONMongo
 	def Parser(file)
 		@parser = PbfParser.new(file)
 	end
-	
+
 	def addPoint(node)
 		this_node = {}
 		this_node[:id] = node[:id]
 		this_node[:geometry]={:type=>'Point', :coordinates=>[node[:lat], node[:lon]]}
 		this_node[:type]="Feature"
 		this_node[:properties]=node
-		
+
 		return @coll.insert(this_node)
 	end
 
@@ -82,7 +82,7 @@ class OSMGeoJSONMongo
 
 	'''
 	This function has all of the same concerns... it will be computationally
-	expensive to reference all of the other geometries -- can we use pointers 
+	expensive to reference all of the other geometries -- can we use pointers
 	to parts of other documents?
 	YES: http://docs.mongodb.org/manual/tutorial/model-referenced-one-to-many-relationships-between-documents/
 	'''
@@ -119,6 +119,7 @@ def parse_test(conn)
 		#end
 	end
 end
+
 
 if __FILE__==$0
 	conn = OSMGeoJSONMongo.new() #Defaults
