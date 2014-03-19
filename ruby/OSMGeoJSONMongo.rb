@@ -97,8 +97,7 @@ class OSMGeoJSONMongo
 end
 
 
-def parse_test(conn)
-	w_count=0
+def read_pbf_to_mongo(conn)
 	while conn.parser.next
 		unless conn.parser.nodes.empty?
 			conn.parser.nodes.each do |node|
@@ -114,6 +113,7 @@ def parse_test(conn)
 		#	r_count+= parser.relations.size
 		#end
 	end
+	puts "Missing node count: #{conn.missing_nodes}"
 end
 
 
@@ -124,6 +124,5 @@ if __FILE__==$0
 
 	#conn.addPoint(parser.nodes.first())
 	#conn.addLine(parser.ways.first())
-	parse_test(conn)
-	puts "Missing node count: #{conn.missing_nodes}"
+	read_pbf_to_mongo(conn)
 end
