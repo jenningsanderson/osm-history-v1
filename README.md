@@ -37,8 +37,7 @@ Useful tutorial: https://github.com/MaZderMind/osm-history-renderer/blob/master/
 ## Importing Data into Mongo
 
 - rename file extension from .osh.pbf to .osm.pbf
-- create a new collection -
-- import your data -
+- ruby read_pbf.rb $DBNAME $PATHTODATA
 
 ## Basic Queries
 
