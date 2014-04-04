@@ -20,7 +20,11 @@ if __FILE__==$0
 	else
 		db 		= ARGV[0]
 		file 	= ARGV[1]
-		limit  = ARGV[2].to_i
+		unless ARGV[2].nil?
+			limit  = ARGV[2].to_i
+		end
+
+		limit ||= nil
 
 		if file=="kath"
 			file = '/Users/jenningsanderson/Documents/OSM/Extracts/kathmandu.osm.pbf'
