@@ -28,7 +28,7 @@ class OSMGeoJSONMongo
 
 	attr_reader :parser, :missing_nodes, :n_count, :w_count, :r_count, :file
 
-	def initialize(database='osmtestdb') #This would be a particular area that we import.
+	def initialize(database) #This would be a particular area that we import. (eg. Nepal)
 		begin
 			client = Mongo::MongoClient.new
 			@db = client[database]
@@ -36,7 +36,7 @@ class OSMGeoJSONMongo
 			#Collections
 			@nodes = @db['nodes']
 			@ways  = @db['ways']
-			@rels  = @db['relations']
+			@relations  = @db['relations']
 			puts "Successfully connected to #{database}"
 		rescue
 			puts "Oops, unable to connect to client -- is it running?"
@@ -44,16 +44,19 @@ class OSMGeoJSONMongo
 		@missing_nodes=0
 	end
 
+	#Initialize the pbf parser from the file
 	def Parser(file)
 		@file = file
 		@parser = PbfParser.new(file)
 	end
 
+	#If the function @parser.seek(0) worked, it would be better...
 	def reset_parser
+		@parser = nil
 		@parser = PbfParser.new(@file)
 	end
 
-	def addPoint(node)
+	def add_node(node)
 		this_node = {}
 		this_node[:date] = Time.at(node[:timestamp]/1000).utc
 		this_node[:id] = node[:id]
@@ -63,11 +66,12 @@ class OSMGeoJSONMongo
 		return @nodes.insert(this_node)
 	end
 
-	def addLine(way, geo_capture=false)
+	def add_way(way)
 		this_line = {}
 		this_line[:date] = Time.at(way[:timestamp]/1000).utc
+
+		#Determine the type of geometry based on if it's closed or not.  Could mis-identify, but it's the best we can do.
 		if way[:refs][0] == way[:refs][-1]
-			#Not a foolproof test -- but not enough data to tell...
 			this_line[:geometry]={:type=>"Polygon",:coordinates=>[]}
 		else
 			this_line[:geometry]={:type=>"LineString",:coordinates=>[]}
@@ -75,32 +79,33 @@ class OSMGeoJSONMongo
 		this_line[:type]="Feature"
 		this_line[:properties]=way
 
-		if geo_capture
-			way[:refs].each do |node_id|
-				geo = @nodes.find({"id"=>node_id},
-					:fields=>{"_id"=>1,"geometry.coordinates"=>1}).first
-				unless geo.nil?
-					this_line[:geometry][:coordinates] << geo["geometry"]["coordinates"]
-				else
-					@missing_nodes +=1
-				end
+		#Query the nodes collection for the coords of each point it references
+		way[:refs].each do |node_id|
+			geo = @nodes.find({"id"=>node_id},
+			opts = {
+				:sort  =>["properties.version", Mongo::DESCENDING],
+				:fields=>{"_id"=>1,"geometry.coordinates"=>1}}).first
+			unless geo.nil?
+				this_line[:geometry][:coordinates] << geo["geometry"]["coordinates"]
+			else
+				@missing_nodes +=1
 			end
 		end
 		return @ways.insert(this_line)
 	end
 
-	def addRelation(relation, geo=false)
+	def add_relation(relation)
+		puts "Called add_relation"
 		this_relation = {}
 		this_relation[:id]=relation[:id]
 		this_relation[:geometry]={:type=>"GeometryCollection",:geometries=>[]}
 		this_relation[:type]="Feature"
 		this_relation[:properties]=relation
+
 		#TODO: If geo, it will have to loop through the refs and access
 		# the lat/lon for each node... yikes
 
-		# -- But that is really only important if we NEED the geo-spatial refs
-
-		return @rels.insert(this_relation)
+		return @relations.insert(this_relation)
 	end
 
 	def file_stats
@@ -122,66 +127,58 @@ class OSMGeoJSONMongo
 		puts "Nodes: #{@n_count}, Ways: #{@w_count}, Relations: #{@r_count}"
 	end
 
-	def read_pbf_to_mongo
-		#First do nodes
-		index = 0
-		while @parser.next
-			unless @parser.nodes.nil?
-				@parser.nodes.each do |node|
-					begin
-						addPoint(node)
-						index += 1
-					rescue
-						p $!
-						begin
-							node["tags"].each do |k,v|
-								k.gsub!('.','_')
-							end
-							addPoint(node)
-						rescue
-							next
-						end
-					end
-					if index%10000==0
-						puts "Processed #{index} of #{@n_count} nodes"
-					end
-				end
-			end
-		end
-
-		#Ensure the index so that it goes a little faster...
-		puts "Adding Index to the id field"
-		@nodes.ensure_index(:id => 1)
-
+	def parse_to_collection(object_type, lim=nil)
 		puts "Resetting the Parser"
 		reset_parser #Reset the parser because 'seek' does not work
-
-		puts "Importing Ways"
+		@missing_nodes = 0
 		index = 0
+		add_func = method("add_#{object_type[0..-2]}")
+		count = eval("@#{object_type[0]}_count")
+
 		while @parser.next
-			unless @parser.ways.nil?
-				@parser.ways.each do |way|
+			unless @parser.send(object_type).nil?
+				@parser.send(object_type).first(lim).each do |obj|
 					begin
-						addLine(way, geo_capture=true)
+						add_func.call(obj)
 						index += 1
 					rescue
 						p $!
 						begin
-							way["tags"].each do |k,v|
+							type["tags"].each do |k,v|
 								k.gsub!('.','_')
 							end
-							addLine(way, geo_capture=true)
+							add_func.call(obj)
 						rescue
 							next
 						end
 					end
 					if index%1000==0
-						puts "Processed #{index} of #{@w_count} ways"
+						puts "Processed #{index} of #{count} #{object_type}"
 					end
 				end
 			end
 		end
+
+		puts "Adding the appropriate indexes"
+		begin
+			eval %Q{@#{object_type}.ensure_index(:id => 1)}
+			eval %Q{@#{object_type}.ensure_index(:geometry =>"2dsphere")}
+		rescue
+			puts "Error creating index"
+			p $!
+		end
+	end
+
+	def read_pbf_to_mongo(lim=nil)
+		puts "Importing Nodes"
+		parse_to_collection('nodes', lim=lim)
+
+		puts "Importing Ways"
+		parse_to_collection('ways', lim=lim)
 		puts "Missing node count: #{missing_nodes}"
+
+		puts "Importing Relations"
+		parse_to_collection('relations', lim=lim)
 	end
 end #class
 

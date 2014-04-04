@@ -18,21 +18,24 @@ if __FILE__==$0
 		puts "Call this in the following manner: "
 		puts "\truby read_pbf.rb [database name] [pbf file]"
 	else
-		db = ARGV[0]
-		file = ARGV[1]
+		db 		= ARGV[0]
+		file 	= ARGV[1]
+		limit  = ARGV[2].to_i
 
-		if db=="nepal"
-			file = '/Users/jenningsanderson/Downloads/nepal.osm.pbf'
+		if file=="kath"
+			file = '/Users/jenningsanderson/Documents/OSM/Extracts/kathmandu.osm.pbf'
 		end
 
+		puts "Calling import with limit: #{limit}"
+
 		#Create connection
-		conn = OSMGeoJSONMongo.new(database=db) #Defaults
+		conn = OSMGeoJSONMongo.new(db) #Defaults
 		parser = conn.Parser(file)
 
 		puts "Information about your file"
 		conn.file_stats
 
 		puts "Beginning Mongo Import"
-		conn.read_pbf_to_mongo
+		conn.read_pbf_to_mongo(lim=limit)
 	end
 end
