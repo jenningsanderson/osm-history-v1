@@ -18,6 +18,7 @@ official history files and simply drop the table whenever.
 '''
 
 require 'pp'
+require 'time'
 
 class OSMGeoJSONMongo
 	''' Is there something amuck with the timestamp?'''
@@ -30,7 +31,7 @@ class OSMGeoJSONMongo
 
 	def initialize(database) #This would be a particular area that we import. (eg. Nepal)
 		begin
-			client = Mongo::MongoClient.new
+			client = Mongo::MongoClient.new('epic-analytics.cs.colorado.edu', 27018)
 			@db = client[database]
 
 			#Collections
@@ -40,6 +41,7 @@ class OSMGeoJSONMongo
 			puts "Successfully connected to #{database}"
 		rescue
 			puts "Oops, unable to connect to client -- is it running?"
+			exit
 		end
 
 		@missing_nodes=0
@@ -173,6 +175,8 @@ class OSMGeoJSONMongo
 	end
 
 	def parse_to_collection(object_type, lim=nil)
+		start_time = Time.now
+    puts "Started #{object_type} import at: #{start_time}"
 		reset_parser #Reset the parser because 'seek' does not work
 
 		@missing_nodes = 0
@@ -203,8 +207,14 @@ class OSMGeoJSONMongo
 							next
 						end
 					end
-					if index%1000==0
+					if index%2000==0
 						puts "Processed #{index} of #{count} #{object_type}"
+						if index%10000==0
+        			rate = index/(Time.now() - start_time) #Tweets processed / seconds elapsed
+        			mins = (count-index) / rate / 60         #minutes left = tweets left * seconds/tweet / 60
+        			hours = mins / 60
+        			puts "Status: #{'%.2f' % rate} #{object_type}/Second. #{'%.2f' % mins} minutes left or #{'%.2f' % hours} hours."
+						end
 					end
 				end
 			end
