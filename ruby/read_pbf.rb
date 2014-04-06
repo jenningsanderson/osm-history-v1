@@ -6,7 +6,7 @@ gem install mongo
 gem install bson_ext
 
 //These two are for parsing PBF:
-brew install protobuf-c
+brew install protobuf-c (Mac)
 gem install pbf_parser
 '''
 

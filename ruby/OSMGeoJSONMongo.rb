@@ -123,6 +123,7 @@ class OSMGeoJSONMongo
 
 	def add_relation(relation)
 		this_relation = {}
+		this_node[:date] = Time.at(relation[:timestamp]/1000).utc
 		this_relation[:id]=relation[:id]
 		this_relation[:geometry]={:type=>"GeometryCollection",:geometries=>[]}
 		this_relation[:type]="Feature"
