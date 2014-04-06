@@ -31,7 +31,7 @@ class OSMGeoJSONMongo
 
 	def initialize(database) #This would be a particular area that we import. (eg. Nepal)
 		begin
-			client = Mongo::MongoClient.new('epic-analytics.cs.colorado.edu', 27018)
+			client = Mongo::MongoClient.new
 			@db = client[database]
 
 			#Collections
