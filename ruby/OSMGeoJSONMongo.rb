@@ -113,6 +113,8 @@ class OSMGeoJSONMongo
 		else
 			if (this_line[:geometry][:coordinates].count > 2) & (way[:refs][0] == way[:refs][-1])
 				this_line[:geometry][:type] = "Polygon"
+			elsif this_line[:geometry][:coordinates].count==1
+				this_line[:geometry][:type] = "Point"
 			else
 				this_line[:geometry][:type] = "LineString"
 			end
@@ -123,7 +125,7 @@ class OSMGeoJSONMongo
 
 	def add_relation(relation)
 		this_relation = {}
-		this_node[:date] = Time.at(relation[:timestamp]/1000).utc
+		this_relation[:date] = Time.at(relation[:timestamp]/1000).utc
 		this_relation[:id]=relation[:id]
 		this_relation[:geometry]={:type=>"GeometryCollection",:geometries=>[]}
 		this_relation[:type]="Feature"
