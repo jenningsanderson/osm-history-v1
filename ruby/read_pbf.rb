@@ -20,20 +20,44 @@ if __FILE__==$0
 	else
 		db 		= ARGV[0]
 		file 	= ARGV[1]
-		unless ARGV[2].nil?
-			limit  = ARGV[2].to_i
+
+		limit_string = ARGV.join.scan(/limit=\d+/i)
+		unless limit_string.empty?
+			limit = limit_string.first.scan(/\d+/).first
+		end
+
+		port_string = ARGV.join.scan(/port=\d+/i)
+		unless port_string.empty?
+			port = port_string.first.scan(/\d+/).first
+		end
+
+		host_string = ARGV.join.scan(/host=.+\s*/i)
+		unless host_string.empty?
+			host  = host_string.first.gsub!('host=','').strip
 		end
 
 		limit ||= nil
+		port  ||= 27017
+		host  ||= 'localhost'
+
+		port = port.to_i
+		unless limit.nil?
+			limit = limit.to_i
+		end
 
 		if file=="kath"
 			file = '/Users/jenningsanderson/Documents/OSM/Extracts/kathmandu.osm.pbf'
 		end
 
-		puts "Calling import with limit: #{limit}"
+		puts "Calling Mongo import with the following:"
+		puts "DB: #{db}"
+		puts "File: #{file}"
+		puts "Limit: #{limit}"
+		puts "Host: #{host}"
+		puts "port: #{port}"
 
 		#Create connection
-		conn = OSMGeoJSONMongo.new(db) #Defaults
+		conn = OSMGeoJSONMongo.new(db, host, port) #Defaults
 		parser = conn.Parser(file)
 
 		puts "Information about your file"

@@ -29,9 +29,9 @@ class OSMGeoJSONMongo
 
 	attr_reader :parser, :missing_nodes, :n_count, :w_count, :r_count, :file
 
-	def initialize(database) #This would be a particular area that we import. (eg. Nepal)
+	def initialize(database, host, port) #This would be a particular area that we import. (eg. Nepal)
 		begin
-			client = Mongo::MongoClient.new
+			client = Mongo::MongoClient.new(host,port)
 			@db = client[database]
 
 			#Collections
@@ -95,7 +95,7 @@ class OSMGeoJSONMongo
 		this_line[:date] = Time.at(way[:timestamp]/1000).utc
 
 		#Determine the type of geometry based on if it's closed or not.  Could mis-identify, but it's the best we can do.
-		this_line[:geometry] = {:coordinates=>[]}
+		this_line[:geometry] = {:type=>"LineString", :coordinates=>[]}
 		this_line[:type]="Feature"
 		this_line[:properties]=way
 
@@ -109,17 +109,17 @@ class OSMGeoJSONMongo
 
 		if this_line[:geometry][:coordinates].empty?
 			@empty_lines +=1
+			this_line[:coordinates_error] = true
 			this_line.delete(:geometry)
 		else
-			if (this_line[:geometry][:coordinates].count > 2) & (way[:refs][0] == way[:refs][-1])
-				this_line[:geometry][:type] = "Polygon"
+			if (this_line[:geometry][:coordinates].count > 2) and (
+					this_line[:geometry][:coordinates].first==this_line[:geometry][:coordinates].last)
+					this_line[:closed] = true
 			elsif this_line[:geometry][:coordinates].count==1
+				this_line[:geometry][:coordinates] = this_line[:geometry][:coordinates].first
 				this_line[:geometry][:type] = "Point"
-			else
-				this_line[:geometry][:type] = "LineString"
 			end
 		end
-
 		return @ways.insert(this_line)
 	end
 

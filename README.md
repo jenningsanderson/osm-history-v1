@@ -32,7 +32,8 @@ _Importing history data into MongoDB_
 
 ## Set up Other Tools
 
-- brew install protobuf-c (mac) or
+- brew install protobuf-c (mac)
+- brew install zlib (mac)
 - gem install  mongo
 - gem install  pbf_parser
 - gem install  bson_ext
@@ -41,7 +42,10 @@ _Importing history data into MongoDB_
 ## Importing Data into Mongo
 
 - rename file extension from .osh.pbf to .osm.pbf
-- ruby read_pbf.rb $DBNAME $PATHTODATA
+- ruby read_pbf.rb $DBNAME $PATHTODATA [limit=4 port=27018 host=localhost]
+
+  Where limit, port, host are optional arguments.  On epic-analytics, please be sure to use port=27018 so as not to use the same mongo instance as EPIC.  The limit argument is for testing, it will only parse the first _limit_ nodes, ways, rels from each block of the PBF file.  Leaving these arguments off will default to no limit, localhost, 27017 (default mongod port)
+
 
 
 #Part III
