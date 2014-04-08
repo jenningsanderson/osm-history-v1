@@ -1,0 +1,86 @@
+## Total number of nodes created or edited per month
+
+var map = function () {
+  var key = this.date.getFullYear() + "-" + this.date.getMonth()
+  emit(key, 1)
+}
+
+var reduce = function(key, values){
+  for(var i=0, sum=0; i < values.length; i++){
+    sum += values[i];
+  }
+  return sum;
+}
+
+db.nodes.mapReduce(map, reduce, { out: 'users_nodes' });
+db.users_nodes.find({})
+
+mongoexport -d kathmandu -c users_nodes -f '_id,value' --csv -o ~/Dropbox/Grad\ School/Spring\ 2014/Quantitative\ Methods/Assignments/Final\ Project/Data/user_nodes.csv
+
+
+## Changesets by month with number of nodes edited in each
+
+var map = function () {
+  emit({changeset: this.properties.changeset ,date: this.date.getFullYear() + "-" + this.date.getMonth()}, { count: 1 });
+}
+
+var reduce = function(key, values) {
+  var count = 0;
+
+  values.forEach(function(v) {
+    count += v['count'];
+  });
+
+  return {count: count};
+}
+
+db.nodes.mapReduce(map, reduce, { out: 'changesets_month' });
+db.changesets_month.find({})
+
+mongoexport -d kathmandu -c changesets_month -f '_id.changeset,_id.date,value.count' --csv -o ~/Dropbox/Grad\ School/Spring\ 2014/Quantitative\ Methods/Assignments/Final\ Project/Data/changesets.csv
+
+
+## Users by month  
+
+var map = function () {
+  emit({ date: this.date.getFullYear() + "-" + this.date.getMonth() },{ user: this.properties.uid });
+}
+
+var reduce = function(key, values) {
+  var count = 0;
+
+  values.forEach(function(v) {
+    count += v['count'];
+  });
+
+  return {count: count};
+  
+}
+
+db.nodes.mapReduce(map, reduce, { out: 'users_months' });
+db.users_months.find({})
+
+mongoexport -d kathmandu -c users_months -f '_id.user,_id.date,value.count' --csv -o ~/Dropbox/Grad\ School/Spring\ 2014/Quantitative\ Methods/Assignments/Final\ Project/Data/users_months.csv
+
+## Still needed to use pivot table here :(
+
+## Lat/Lon
+var map = function () {
+  var year = this.date.getFullYear();
+  var month = this.date.getFullYear() + "-" + this.date.getMonth();
+  var day = this.date.getFullYear() + "-" + this.date.getMonth() + "-" + this.date.getDate();
+  emit(this._id, { "day": day, "month": month, "year": year, "lat": this.properties.lat, "lon": this.properties.lon	} );
+}
+
+var reduce = function(key, values){
+  return values;
+}
+db.nodes.mapReduce(map, reduce, { out: 'location_nodes', sort: { "date":1 }, query: { "properties.lat": {$ne: 0}, "date" : { $gte : new ISODate("2012-11-11T20:15:31Z") } } });
+
+## FLATTEN RESULTS INTO NEW TABLE
+db.location_nodes.find({}).forEach( function(result) {
+	db.location.insert({_id: result._id, day: result.value.day, month: result.value.month, year: result.value.year, lat: result.value.lat, lon: result.value.lon })
+});
+
+## Export to CSV
+mongoexport -d kathmandu -c location -f '_id,year,month,day,lat,lon' --csv -o ~/Dropbox/Grad\ School/Spring\ 2014/Quantitative\ Methods/Assignments/Final\ Project/Data/locations.csv
