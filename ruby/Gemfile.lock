@@ -1,9 +1,0 @@
-GEM
-  specs:
-    pbf_parser (0.1.0)
-
-PLATFORMS
-  ruby
-
-DEPENDENCIES
-  pbf_parser
