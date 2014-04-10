@@ -1,2 +1,0 @@
-source 'https://rubygems.org'
-gem 'pbf_parser', "0.0.6"
