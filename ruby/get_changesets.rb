@@ -5,6 +5,7 @@ require 'uri'
 require 'nokogiri'
 require 'json'
 require 'time'
+require 'optparse'
 
 class OSMChangeset
 
@@ -12,9 +13,11 @@ class OSMChangeset
 
   attr_reader :changeid, :changeset
 
-  def initialize(id)
+  def initialize(id, type)
     @changeid = id
-    @changeset = {}
+    cnt = COLL.find({"properties.changeset"=>id}).count()
+    @changeset = {type+'_count' => cnt}
+
   end
 
   def hit_api
@@ -61,7 +64,7 @@ class OSMChangeset
   end
 
   def insert_to_mongo
-    DB['changesets'].insert(@changeset)
+    DB['changesets'].update({"id" => @changeset["id"]}, @changeset, opts={:upsert=>true})
   end
 
 end
@@ -87,25 +90,25 @@ if __FILE__ == $0
     end
   end
   opts.parse!(ARGV)
-  unless options.collection and options.filename
+  unless options.db and options.coll
     puts opts
     exit
   end
-  puts "Running User script"
-  db = 'haiti'
 
   mongo_conn = Mongo::MongoClient.new('epic-analytics.cs.colorado.edu','27018')
   DB = mongo_conn[db]
-  COLL = DB[coll]
+  COLL = DB[options.coll]
 
   nodes_query = COLL.find({},
                     opts={:fields=>["properties.changeset"],
                           :limit=>options.limit})
 
+  puts nodes_query.count()
+
   changesets = nodes_query.collect{ |x| x["properties"]["changeset"]}
 
-  changesets.each do |changeset|
-    this_changeset = OSMChangeset.new(changeset)
+  changesets.uniq.each do |changeset|
+    this_changeset = OSMChangeset.new(changeset, options.coll)
 
     if this_changeset.hit_api
       this_changeset.parse_response

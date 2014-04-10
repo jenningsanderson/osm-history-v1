@@ -45,10 +45,6 @@ if __FILE__==$0
 			limit = limit.to_i
 		end
 
-		if file=="kath"
-			file = '/Users/jenningsanderson/Documents/OSM/Extracts/kathmandu.osm.pbf'
-		end
-
 		puts "Calling Mongo import with the following:"
 		puts "DB: #{db}"
 		puts "File: #{file}"
