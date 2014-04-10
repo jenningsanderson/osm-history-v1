@@ -1,3 +1,36 @@
+## Total number of nodes created or edited per hour
+
+var map = function () {
+  var key = this.date.getFullYear() + "-" + this.date.getMonth() + "-" + this.date.getDate() + "-" + this.date.getHours()
+  emit(key, 1)
+}
+
+var reduce = function(key, values){
+  for(var i=0, sum=0; i < values.length; i++){
+    sum += values[i];
+  }
+  return sum;
+}
+
+db.nodes.mapReduce(map, reduce, { out: 'users_hours' });
+
+
+## Total number of nodes created or edited per day
+
+var map = function () {
+  var key = this.date.getFullYear() + "-" + this.date.getMonth() + "-" + this.date.getDate()
+  emit(key, 1)
+}
+
+var reduce = function(key, values){
+  for(var i=0, sum=0; i < values.length; i++){
+    sum += values[i];
+  }
+  return sum;
+}
+
+db.nodes.mapReduce(map, reduce, { out: 'users_days' });
+
 ## Total number of nodes created or edited per month
 
 var map = function () {
@@ -12,11 +45,7 @@ var reduce = function(key, values){
   return sum;
 }
 
-db.nodes.mapReduce(map, reduce, { out: 'users_nodes' });
-db.users_nodes.find({})
-
-mongoexport -d kathmandu -c users_nodes -f '_id,value' --csv -o ~/Dropbox/Grad\ School/Spring\ 2014/Quantitative\ Methods/Assignments/Final\ Project/Data/user_nodes.csv
-
+db.nodes.mapReduce(map, reduce, { out: 'months_nodes' });
 
 ## Changesets by month with number of nodes edited in each
 
@@ -37,32 +66,38 @@ var reduce = function(key, values) {
 db.nodes.mapReduce(map, reduce, { out: 'changesets_month' });
 db.changesets_month.find({})
 
-mongoexport -d kathmandu -c changesets_month -f '_id.changeset,_id.date,value.count' --csv -o ~/Dropbox/Grad\ School/Spring\ 2014/Quantitative\ Methods/Assignments/Final\ Project/Data/changesets.csv
 
-
-## Users by month  
+## Users by month step 1
 
 var map = function () {
-  emit({ date: this.date.getFullYear() + "-" + this.date.getMonth() },{ user: this.properties.uid });
+  emit({ date: this.date.getFullYear() + "-" + this.date.getMonth(), user: this.properties.uid },{ count: 1 });
 }
 
 var reduce = function(key, values) {
   var count = 0;
-
   values.forEach(function(v) {
-    count += v['count'];
+    count += v.count;
   });
 
-  return {count: count};
-  
+  return {
+    count: count
+    };
 }
 
-db.nodes.mapReduce(map, reduce, { out: 'users_months' });
-db.users_months.find({})
+db.nodes.mapReduce(map, reduce, { out: 'users_months_step1' });
 
-mongoexport -d kathmandu -c users_months -f '_id.user,_id.date,value.count' --csv -o ~/Dropbox/Grad\ School/Spring\ 2014/Quantitative\ Methods/Assignments/Final\ Project/Data/users_months.csv
+## Users by month step 2
 
-## Still needed to use pivot table here :(
+db.users_months_step1.group(
+   {
+     key: { "_id.date" },
+     reduce: function( curr, result ) {
+            result.total += 1;
+             },
+     initial: { total:0 }
+   }
+)
+
 
 ## Lat/Lon
 var map = function () {
@@ -82,5 +117,5 @@ db.location_nodes.find({}).forEach( function(result) {
 	db.location.insert({_id: result._id, day: result.value.day, month: result.value.month, year: result.value.year, lat: result.value.lat, lon: result.value.lon })
 });
 
-## Export to CSV
+## Export to CSV Example
 mongoexport -d kathmandu -c location -f '_id,year,month,day,lat,lon' --csv -o ~/Dropbox/Grad\ School/Spring\ 2014/Quantitative\ Methods/Assignments/Final\ Project/Data/locations.csv
