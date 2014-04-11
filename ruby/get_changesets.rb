@@ -11,13 +11,13 @@ class OSMChangeset
 
   @@url_base = "http://api.openstreetmap.org/api/0.6/changeset/"
 
-  attr_reader :changeid, :changeset
+  attr_reader :changeset
 
   def initialize(id, type)
     @changeid = id
-    cnt = COLL.find({"properties.changeset"=>id}).count()
-    @changeset = {type+'_count' => cnt}
-
+    objects_query = COLL.find({"properties.changeset"=>id})
+    objects = objects_query.collect{|x| x["id"]}
+    @changeset = {type[0..-2]+'_count' => objects.size, type=>objects }
   end
 
   def hit_api
@@ -55,16 +55,18 @@ class OSMChangeset
     @changeset[:geometry] = { :type=>"Polygon", :coordinates=>[coords]}
   end
 
-  def parse_date
+  def fix_types
     open = Time.parse @changeset["created_at"]
     close = Time.parse @changeset["closed_at"]
-
     @changeset["created_at"] = open
     @changeset["closed_at"] = close
+
+    @changeset["id"] = @changeset["id"].to_i
+    @changeset["uid"] = @changeset["uid"].to_i
   end
 
   def insert_to_mongo
-    DB['changesets'].update({"id" => @changeset["id"]}, @changeset, opts={:upsert=>true})
+    DB['changesets'].update({"id" => @changeset["id"]}, {'$set' => @changeset}, opts={:upsert=>true})
   end
 
 end
@@ -96,27 +98,29 @@ if __FILE__ == $0
   end
 
   mongo_conn = Mongo::MongoClient.new('epic-analytics.cs.colorado.edu','27018')
-  DB = mongo_conn[db]
+  DB = mongo_conn[options.db]
   COLL = DB[options.coll]
 
-  nodes_query = COLL.find({},
-                    opts={:fields=>["properties.changeset"],
-                          :limit=>options.limit})
+  query = COLL.distinct("properties.changeset").first(options.limit)
+  changesets = query.collect{|x| x.to_i}
 
-  puts nodes_query.count()
+  changesets.sort! #safety measure (Incase the import crashes...)
 
-  changesets = nodes_query.collect{ |x| x["properties"]["changeset"]}
+  size = changesets.count()
 
-  changesets.uniq.each do |changeset|
+  puts "Processing #{size} changesets"
+
+  changesets.each_with_index do |changeset, i|
     this_changeset = OSMChangeset.new(changeset, options.coll)
-
     if this_changeset.hit_api
       this_changeset.parse_response
       this_changeset.extract_bounding_box
-      this_changeset.parse_date
-
+      this_changeset.fix_types
       this_changeset.insert_to_mongo
     end
 
+    if (i%10).zero?
+      print "Processed #{i} of #{size}"
+    end
   end
 end

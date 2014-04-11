@@ -226,6 +226,8 @@ class OSMGeoJSONMongo
 		puts "Adding the appropriate indexes"
 		begin
 			eval %Q{@#{object_type}.ensure_index(:id => 1)}
+			eval %Q{@#{object_type}.ensure_index("properties.changeset" => 1)}
+			eval %Q{@#{object_type}.ensure_index("properties.uid" => 1)}
 			eval %Q{@#{object_type}.ensure_index(:geometry =>"2dsphere")}
 		rescue
 			puts "Error creating index"
