@@ -120,7 +120,7 @@ if __FILE__ == $0
     end
 
     if (i%10).zero?
-      print "Processed #{i} of #{size}"
+      puts "Processed #{i} of #{size}"
     end
   end
 end
