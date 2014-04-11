@@ -83,9 +83,7 @@ if __FILE__ == $0
     opts.on("-c", "--Collection Collection Name",
             "Type of OSM object (nodes, ways, relations)"){|v| options.coll = v }
     opts.on("-l", "--limit [LIMIT]",
-            "[Optional] Limit of objects to parse"){|v|
-              v ||= 10000000
-              options.limit = v.to_i }
+            "[Optional] Limit of objects to parse"){|v| options.limit = v.to_i }
     opts.on_tail("-h", "--help", "Show this message") do
       puts opts
       exit
@@ -96,6 +94,8 @@ if __FILE__ == $0
     puts opts
     exit
   end
+
+  options.limit ||= 10000000
 
   mongo_conn = Mongo::MongoClient.new('epic-analytics.cs.colorado.edu','27018')
   DB = mongo_conn[options.db]
