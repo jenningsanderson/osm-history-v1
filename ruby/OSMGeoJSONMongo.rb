@@ -38,6 +38,7 @@ class OSMGeoJSONMongo
 			@nodes = @db['nodes']
 			@ways  = @db['ways']
 			@relations  = @db['relations']
+			@notes = @db['notes']
 			puts "Successfully connected to #{database}"
 		rescue
 			puts "Oops, unable to connect to client -- is it running?"
@@ -250,6 +251,18 @@ class OSMGeoJSONMongo
 		puts "Empty way count: #{@empty_lines}"
 		puts "Empty Geometries: #{@empty_geometries}"
 
+	end
+
+	def read_notes_to_mongo(api_notes, lim=nil)
+		i = 1
+		api_notes.each do |note|
+			print "\r[INFO]: Storing #{i} of #{api_notes.size}..."
+			note["id"] = note["properties"]["id"]
+			note["geometry"] = {:type => "Point", :coordinates => [note["geometry"]["coordinates"][1], note["geometry"]["coordinates"][0]]} #Critical to swap these
+			@notes.insert(note)
+			i += 1
+		end
+		puts "\n[OK]: This batch done."	
 	end
 end #class
 
