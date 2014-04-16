@@ -50,7 +50,7 @@ class OSMChangeset
     ur = [ @changeset["max_lon"].to_f, @changeset["max_lat"].to_f ]
     ul = [ @changeset["min_lon"].to_f, @changeset["max_lat"].to_f ]
 
-    if ( (ll[0][0] - ur[0][0]).abs <= 0.0000001) or ( (ll[0][1] - ur[0][1]).abs <= 0.0000001)
+    if ( (ll[0] - ur[0]).abs <= 0.0000001) or ( (ll[1] - ur[1]).abs <= 0.0000001)
       type = "Point"
       coords = [ll,ul, ur, lr, ll]
     else
