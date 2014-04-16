@@ -50,9 +50,15 @@ class OSMChangeset
     ur = [ @changeset["max_lon"].to_f, @changeset["max_lat"].to_f ]
     ul = [ @changeset["min_lon"].to_f, @changeset["max_lat"].to_f ]
 
-    coords = [ll,ul, ur, lr, ll]
+    if (math.abs(ll[0][0] - ur[0][0]) <= .0000001) or (math.abs(ll[0][1] - ur[0][1]) <= .0000001)
+      type = "Point"
+      coords = [ll,ul, ur, lr, ll]
+    else
+      type = "Polygon"
+      coords = [ll,ul, ur, lr, ll]
+    end
 
-    @changeset[:geometry] = { :type=>"Polygon", :coordinates=>[coords]}
+    @changeset[:geometry] = { :type=>type, :coordinates=>[coords]}
   end
 
   def fix_types
@@ -111,14 +117,18 @@ if __FILE__ == $0
   puts "Processing #{size} changesets"
 
   changesets.each_with_index do |changeset, i|
-    this_changeset = OSMChangeset.new(changeset, options.coll)
-    if this_changeset.hit_api
-      this_changeset.parse_response
-      this_changeset.extract_bounding_box
-      this_changeset.fix_types
-      this_changeset.insert_to_mongo
+    begin
+      this_changeset = OSMChangeset.new(changeset, options.coll)
+      if this_changeset.hit_api
+        this_changeset.parse_response
+        this_changeset.extract_bounding_box
+        this_changeset.fix_types
+        this_changeset.insert_to_mongo
+      end
+    rescue
+      p $!
+      puts "Error occured, continueing"
     end
-
     if (i%10).zero?
       puts "Processed #{i} of #{size}"
     end
