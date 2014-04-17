@@ -49,7 +49,25 @@ Where limit, port, host are optional arguments.  On epic-analytics, please be su
 
 #Part III
 _Using the framework for ..._
+## Finding Changesets by User
+In order to compare changesets between users, the script users_changesets.rb generates a single geojson feature collection.  Each feature includes a user id and the total number of changesets for that user, the geometry represents the extents of a single changeset. with with polygons and points representing the extents.
+
+There script grabs changesets within a specific timewindow, referenced by the ````@@query_time```` hash.
+
+Run the script: ````ruby ruby/users_changesets.rb -database haiti -filename haiti_changesets -limit 100````
+
+will generate the following file:
+**haiti_changesets.geojson**
+
+###TODO
+  - Burn changeset info into changeset (such as time)
+  - Generate KML file for visualizing in Google Earth
+
 ## Basic Queries
+
+
+
+
 
 - changesets by user
 - changesets by time
@@ -63,4 +81,3 @@ _Using the framework for ..._
 
 
 ## Grabbing User Data
-

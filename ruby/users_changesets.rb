@@ -67,7 +67,7 @@ class UserWithChangesets
     end
   end
 
-  def bounding_box
+  def bounding_box_envelope
     envelope = @bounding_box.envelope #=> Will have to turn this into a valid geojson polygon
 
     GeoRuby::SimpleFeatures::Polygon.from_coordinates(
@@ -78,8 +78,54 @@ class UserWithChangesets
         [envelope.lower_corner.x, envelope.lower_corner.y]]] )
   end
 
-
+  def changesets_geometries
+    @bounding_box
+  end
 end #class
+
+def write_user_bounding_envelopes(filename, cursor, db)
+  puts "Opening file for writing"
+  file = GeoJSONWriter.new(filename)
+  file.write_header
+  cnt = 0
+  cursor.each_with_index do |uid, i|
+    this_user = UserWithChangesets.new(uid, db)
+    if this_user.get_changesets
+      this_user.process_geometries
+      feature = {:type=>"Feature", :geometry=>this_user.bounding_box_envelope, :properties=>this_user.properties}
+      file.literal_write_feature(feature.to_json)
+      cnt+=1
+    end
+    if (i%10).zero?
+      puts "Processed #{i} users"
+    end
+  end
+  file.write_footer
+  puts "Found #{cnt} users"
+end
+
+def write_user_changesets(filename, cursor, db)
+  puts "Opening file for writing"
+  file = GeoJSONWriter.new(filename)
+  file.write_header
+  cnt = 0
+  cursor.each_with_index do |uid, i|
+    this_user = UserWithChangesets.new(uid, db)
+    if this_user.get_changesets
+      this_user.process_geometries
+      this_user.changesets_geometries.each do |geom|
+        feature = {:type=>"Feature", :geometry=>geom, :properties=>this_user.properties}
+        file.literal_write_feature(feature.to_json)
+      end
+      cnt+=1
+    end
+    if (i%10).zero?
+      puts "Processed #{i} users"
+    end
+  end
+  file.write_footer
+  puts "Found #{cnt} users"
+end
 
 if __FILE__ == $0
   options = OpenStruct.new
@@ -115,26 +161,8 @@ if __FILE__ == $0
 
   puts "Processing #{size} Users"
 
-  puts "Opening file for writing"
+  #write_user_bounding_envelopes(options.filename, uids, options.db)
+  write_user_changesets(options.filename, uids, options.db)
 
-  file = GeoJSONWriter.new(options.filename)
-  file.write_header
 
-  cnt = 0
-
-  uids.each_with_index do |uid, i|
-    this_user = UserWithChangesets.new(uid, options.db)
-    if this_user.get_changesets
-      this_user.process_geometries
-      feature = {:type=>"Feature", :geometry=>this_user.bounding_box, :properties=>this_user.properties}
-      file.literal_write_feature(feature.to_json)
-      cnt+=1
-    end
-
-    if (i%10).zero?
-      puts "Processed #{i} of #{size}"
-    end
-  end
-  file.write_footer
-  puts "Found #{cnt} users"
 end
