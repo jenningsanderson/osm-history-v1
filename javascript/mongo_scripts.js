@@ -43,3 +43,20 @@ db.changesets.find().forEach(function(doc){
 		}
 	}
 })
+
+//Fix an error to reform the points...
+var cnt = 0
+db.changesets.find({"geometry.coordinates" : [ [ [ 0.0, 0.0 ], [ 0.0, 0.0 ], [ 0.0, 0.0 ], [ 0.0, 0.0 ], [ 0.0, 0.0 ] ] ]}).forEach(function(doc){
+	delete doc.geometry
+	db.changesets.update({id : doc.id}, doc)
+})
+
+
+	
+
+
+
+
+
+
+

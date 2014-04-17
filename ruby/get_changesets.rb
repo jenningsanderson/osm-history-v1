@@ -52,13 +52,13 @@ class OSMChangeset
 
     if ( (ll[0] - ur[0]).abs <= 0.0000001) or ( (ll[1] - ur[1]).abs <= 0.0000001)
       type = "Point"
-      coords = [ll,ul, ur, lr, ll]
+      coords = [ll,ul]
     else
       type = "Polygon"
-      coords = [ll,ul, ur, lr, ll]
+      coords = [ [ll,ul, ur, lr, ll] ]
     end
 
-    @changeset[:geometry] = { :type=>type, :coordinates=>[coords]}
+    @changeset[:geometry] = { :type=>type, :coordinates=>coords}
   end
 
   def fix_types
