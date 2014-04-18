@@ -9,7 +9,6 @@ require 'geo_ruby/kml'
 require_relative 'write_geojson_featurecollection'
 require_relative 'kml_writer_helper'
 
-
 class UserWithChangesets
 
   @@query_bb = {:haiti =>
@@ -44,13 +43,12 @@ class UserWithChangesets
     @db = db.to_sym
   end
 
-
   def get_changesets
     @changesets = COLL.find({:uid => @uid,
                              :closed_at=> {"$gt" => @@query_time[@db][:start], "$lt"=> @@query_time[@db][:end]},
                              :geometry => {"$geoWithin"=>
                                  {"$geometry" => @@query_bb[@db]}}},
-                            {:fields=>['geometry', 'id', 'closed_at', 'created_at']})
+                            {:fields=>['geometry', 'id', 'closed_at', 'created_at', 'user', 'node_count']})
     @changeset_count = @changesets.count()
     @properties = {:uid => @uid, :changesets => @changeset_count}
     unless @changeset_count.zero?
@@ -135,7 +133,7 @@ def write_changeset_kml(filename, cursor, db)
 
   file = KMLAuthor.new(filename)
   file.write_header("Testing a KML file")
-  file.add_default_styles
+  file.generate_random_styles(100)
 
   cnt = 0
   cursor.each_with_index do |uid, i|
@@ -147,12 +145,17 @@ def write_changeset_kml(filename, cursor, db)
 
       this_folder = {:name=>uid, :features=>[]}
 
+      random = rand(100) #Set a random color for this user
+
       this_user.changesets.each_with_index do |changeset, j|
         this_folder[:features] << {
           :name => changeset["id"],
           :geometry => this_user.edits[j],
           :time => changeset['closed_at'],
-          :style =>:transBluePoly
+          :style =>"#r_style_#{random}",
+          :desc => %Q{Time: #{changeset['closed_at']}
+                      User: #{changeset['user']}
+                      Nodes: #{changeset['node_count']}}
         }
       end
       file.write_folder(this_folder)
@@ -182,7 +185,7 @@ if __FILE__ == $0
     end
   end
   opts.parse!(ARGV)
-  unless options.db
+  unless options.db and options.filename
     puts opts
     exit
   end

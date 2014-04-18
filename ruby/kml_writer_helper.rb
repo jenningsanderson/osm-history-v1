@@ -1,8 +1,13 @@
+require 'mongo'
+require 'optparse'
+require 'json'
+require 'time'
+require 'georuby'
+require 'geo_ruby/geojson'
 require 'geo_ruby/kml'
 require 'time'
 
 class KMLAuthor
-
   def initialize(filename)
     @filename = filename.dup #Getting weird frozen error...
     unless @filename =~ /\.kml$/
@@ -18,7 +23,7 @@ class KMLAuthor
   end
 
   def write_folder(folder)
-    @openfile.write "<Folder>\n<name>#{folder[:name]}</name>"
+    @openfile.write "<Folder>\n<name>#{folder[:name]}</name>\n"
     unless folder[:features].empty?
       folder[:features].each do |feature|
         write_placemark(feature)
@@ -31,12 +36,22 @@ class KMLAuthor
     @openfile.write "<Placemark>\n"
     @openfile.write "\t<name>#{feature[:name]}</name>\n"
     if feature.has_key? :style
-      @openfile.write "<styleUrl>##{feature[:style].to_s}</styleUrl>"
+      @openfile.write "\t<styleUrl>#{feature[:style]}</styleUrl>\n"
+    end
+    if feature.has_key? :extended
+      @openfile.write "\t<ExtendedData>\n"
+      feature[:extended].each do |k,v|
+        @openfile.write "\t\t<Data name=\"#{k}\">#{v}</Data>\n"
+      end
+      @openfile.write "\t</ExtendedData>\n"
+    end
+    if feature.has_key? :desc
+      @openfile.write "\t<description>\n\t\t#{feature[:desc]}\n\t</description>\n"
     end
     if feature.has_key? :time
-      @openfile.write "<TimeStamp>\n"
-      @openfile.write "\t<when>#{feature[:time].iso8601}</when>\n"
-      @openfile.write "</TimeStamp>"
+      @openfile.write "\t<TimeStamp>\n"
+      @openfile.write "\t\t<when>#{feature[:time].iso8601}</when>\n"
+      @openfile.write "\t</TimeStamp>"
     end
     @openfile.write "\t"+feature[:geometry].as_kml
     @openfile.write "</Placemark>\n\n"
@@ -58,66 +73,39 @@ class KMLAuthor
     @openfile.write "</Style>"
   end
 
-  def add_default_styles
-    @openfile.write %Q{
-    <Style id="transBluePoly">
-      <LineStyle>
-        <width>1.5</width>
-      </LineStyle>
-      <PolyStyle>
-        <color>7dff0000</color>
-      </PolyStyle>
-    </Style>
-    <visibility>0</visibility>
-
-    <Style id="Before">
-      <IconStyle>
-        <scale>0.4</scale>
-        <Icon>
-          <href>http://maps.google.com/mapfiles/kml/paddle/grn-blank-lv.png</href>
-        </Icon>
-      </IconStyle>
-      <LabelStyle>
-        <scale>0</scale>
-      </LabelStyle>
-      <LineStyle>
-        <color>ff5bbd00</color>
-        <width>1.4</width>
-      </LineStyle>
-    </Style>
-
-    <Style id="During">
-      <IconStyle>
-        <scale>0.4</scale>
-        <Icon>
-          <href>http://maps.google.com/mapfiles/kml/paddle/red-circle-lv.png</href>
-        </Icon>
-      </IconStyle>
-      <LabelStyle>
-        <scale>0</scale>
-      </LabelStyle>
-      <LineStyle>
-        <color>ff1515a6</color>
-        <width>1.4</width>
-      </LineStyle>
-    </Style>
-
-    <Style id="After">
-      <IconStyle>
-        <scale>0.4</scale>
-        <Icon>
-          <href>http://maps.google.com/mapfiles/kml/paddle/ylw-blank-lv.png</href>
-        </Icon>
-      </IconStyle>
-      <LabelStyle>
-        <scale>0</scale>
-      </LabelStyle>
-      <LineStyle>
-        <color>ff7fffff</color>
-        <width>1.4</width>
-      </LineStyle>
-    </Style>
-  }
+  def random_hex_color
+    (0..5).map{ rand(16).to_s(16) }.join
   end
 
+  def generate_random_styles(number_of_styles)
+
+    number_of_styles.times do |id|
+      #Generate a random hex color
+      color = random_hex_color
+
+      #Open the Style
+      @openfile.write "<Style id=\"r_style_#{id}\">\n"
+
+      #Point
+      @openfile.write %Q{\t<IconStyle>
+        <scale>.8</scale>
+    </IconStyle>\n}
+
+      #Line
+      @openfile.write %Q{\t<LineStyle>
+        <color>#{color}</color>
+        <width>1.5</width>
+    </LineStyle>\n}
+
+      #Poly
+      @openfile.write %Q{\t<PolyStyle>
+        <color>AA#{color}</color>
+        <BalloonStyle>
+          <text>&lt;h1&gt;$[name]&lt;/h1&gt;$[description]</text>
+          <bgColor>ffd5efff</bgColor>
+        </BalloonStyle>
+    </PolyStyle>\n}
+      @openfile.write "</Style>\n\n"
+    end
+  end
 end
