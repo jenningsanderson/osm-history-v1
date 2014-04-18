@@ -5,7 +5,9 @@ require 'json'
 require 'time'
 require 'georuby'
 require 'geo_ruby/geojson'
+require 'geo_ruby/kml'
 require_relative 'write_geojson_featurecollection'
+require_relative 'kml_writer_helper'
 
 
 class UserWithChangesets
@@ -34,7 +36,7 @@ class UserWithChangesets
                     :end  =>Time.new(2013,12,6)}
                  }
 
-  attr_reader :uid, :properties
+  attr_reader :uid, :properties, :edits, :changesets
 
   def initialize(uid, db)
     @uid = uid
@@ -48,7 +50,7 @@ class UserWithChangesets
                              :closed_at=> {"$gt" => @@query_time[@db][:start], "$lt"=> @@query_time[@db][:end]},
                              :geometry => {"$geoWithin"=>
                                  {"$geometry" => @@query_bb[@db]}}},
-                            {:fields=>['geometry']})
+                            {:fields=>['geometry', 'id', 'closed_at', 'created_at']})
     @changeset_count = @changesets.count()
     @properties = {:uid => @uid, :changesets => @changeset_count}
     unless @changeset_count.zero?
@@ -65,6 +67,7 @@ class UserWithChangesets
     unless @edits.empty?
       @bounding_box = GeoRuby::SimpleFeatures::GeometryCollection.from_geometries(@edits)
     end
+    @changesets.rewind! #Reset the cursor
   end
 
   def bounding_box_envelope
@@ -127,6 +130,41 @@ def write_user_changesets(filename, cursor, db)
   puts "Found #{cnt} users"
 end
 
+def write_changeset_kml(filename, cursor, db)
+  puts "Attempting to write a kml file... this is new"
+
+  file = KMLAuthor.new(filename)
+  file.write_header("Testing a KML file")
+  file.add_default_styles
+
+  cnt = 0
+  cursor.each_with_index do |uid, i|
+    this_user = UserWithChangesets.new(uid, db)
+
+    if this_user.get_changesets
+      cnt+=1
+      this_user.process_geometries
+
+      this_folder = {:name=>uid, :features=>[]}
+
+      this_user.changesets.each_with_index do |changeset, j|
+        this_folder[:features] << {
+          :name => changeset["id"],
+          :geometry => this_user.edits[j],
+          :time => changeset['closed_at'],
+          :style =>:transBluePoly
+        }
+      end
+      file.write_folder(this_folder)
+    end
+    if (i%10).zero?
+      puts "Processed #{i} users"
+    end
+  end
+  file.write_footer
+  puts "Found #{cnt} users"
+end
+
 if __FILE__ == $0
   options = OpenStruct.new
   opts = OptionParser.new do |opts|
@@ -162,7 +200,8 @@ if __FILE__ == $0
   puts "Processing #{size} Users"
 
   #write_user_bounding_envelopes(options.filename, uids, options.db)
-  write_user_changesets(options.filename, uids, options.db)
+  #write_user_changesets(options.filename, uids, options.db)
+  write_changeset_kml(options.filename, uids, options.db)
 
 
 end
