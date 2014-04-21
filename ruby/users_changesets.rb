@@ -193,7 +193,7 @@ if __FILE__ == $0
   end
   options.limit ||= 100000
 
-  mongo_conn = Mongo::MongoClient.new('epic-analytics.cs.colorado.edu','27018')
+  mongo_conn = Mongo::MongoClient.new('localhost','27018')
   DB = mongo_conn[options.db]
   COLL = DB['changesets']
 
