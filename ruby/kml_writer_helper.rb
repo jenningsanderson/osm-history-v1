@@ -24,9 +24,16 @@ class KMLAuthor
 
   def write_folder(folder)
     @openfile.write "<Folder>\n<name>#{folder[:name]}</name>\n"
-    unless folder[:features].empty?
-      folder[:features].each do |feature|
-        write_placemark(feature)
+
+    unless folder[:folders].nil?
+      folder[:folders].each do |inner_folder|
+        write_folder(inner_folder)
+      end
+    else
+      unless folder[:features].empty?
+        folder[:features].each do |feature|
+          write_placemark(feature)
+        end
       end
     end
     @openfile.write "</Folder>\n\n"
@@ -34,7 +41,9 @@ class KMLAuthor
 
   def write_placemark(feature)
     @openfile.write "<Placemark>\n"
-    @openfile.write "\t<name>#{feature[:name]}</name>\n"
+    unless feature[:name].nil?
+      @openfile.write "\t<name>#{feature[:name]}</name>\n"
+    end
     if feature.has_key? :style
       @openfile.write "\t<styleUrl>#{feature[:style]}</styleUrl>\n"
     end
@@ -46,14 +55,30 @@ class KMLAuthor
       @openfile.write "\t</ExtendedData>\n"
     end
     if feature.has_key? :desc
+      if feature.has_key? :link
+        @openfile.write "\t<description>\n\t\t#{feature[:desc]}\n<![CDATA[<img src=\"#{feature[:link]}\">]]></description>\n"
+      else
       @openfile.write "\t<description>\n\t\t#{feature[:desc]}\n\t</description>\n"
+      end
     end
     if feature.has_key? :time
       @openfile.write "\t<TimeStamp>\n"
       @openfile.write "\t\t<when>#{feature[:time].iso8601}</when>\n"
       @openfile.write "\t</TimeStamp>"
     end
-    @openfile.write "\t"+feature[:geometry].as_kml
+    if feature.has_key? :gxTrack
+      @openfile.write %Q{\t<gx:Track>
+      \t\t<altitudeMode>absolute</altitudeMode>
+      \t\t<when>#{feature[:gxTrack][:start][:time].iso8601}</when>
+      \t\t<when>#{feature[:gxTrack][:end][:time].iso8601}</when>
+      \t\t<gx:coord>#{feature[:gxTrack][:start][:pos]}</gx:coord>
+      \t\t<gx:coord>#{feature[:gxTrack][:end][:pos]}</gx:coord>
+      \t</gx:Track>}
+    end
+
+    unless feature[:geometry].nil?
+      @openfile.write "\t"+feature[:geometry].as_kml
+    end
     @openfile.write "</Placemark>\n\n"
   end
 
@@ -88,12 +113,17 @@ class KMLAuthor
 
       #Point
       @openfile.write %Q{\t<IconStyle>
-        <scale>.8</scale>
+        <color>77#{color}</color>
+         <scale>.5</scale>
+         <Icon>http://maps.google.com/mapfiles/kml/paddle/wht-blank-lv.png</Icon>
+          <LabelStyle>
+            <scale>0</scale>
+          </LabelStyle>
     </IconStyle>\n}
 
       #Line
       @openfile.write %Q{\t<LineStyle>
-        <color>#{color}</color>
+        <color>77#{color}</color>
         <width>1.5</width>
     </LineStyle>\n}
 
@@ -107,5 +137,56 @@ class KMLAuthor
     </PolyStyle>\n}
       @openfile.write "</Style>\n\n"
     end
+  end
+
+  def write_3_bin_styles
+    @openfile.write %Q{
+    <Style id="before">
+      <IconStyle>
+        <scale>0.4</scale>
+        <Icon>
+          <href>http://maps.google.com/mapfiles/kml/paddle/grn-blank-lv.png</href>
+        </Icon>
+      </IconStyle>
+      <LabelStyle>
+        <scale>0</scale>
+      </LabelStyle>
+      <LineStyle>
+        <color>ff5bbd00</color>
+        <width>1.4</width>
+      </LineStyle>
+    </Style>
+
+    <Style id="during">
+      <IconStyle>
+        <scale>0.4</scale>
+        <Icon>
+          <href>http://maps.google.com/mapfiles/kml/paddle/red-circle-lv.png</href>
+        </Icon>
+      </IconStyle>
+      <LabelStyle>
+        <scale>0</scale>
+      </LabelStyle>
+      <LineStyle>
+        <color>ff1515a6</color>
+        <width>1.4</width>
+      </LineStyle>
+    </Style>
+
+    <Style id="after">
+      <IconStyle>
+        <scale>0.4</scale>
+        <Icon>
+          <href>http://maps.google.com/mapfiles/kml/paddle/ylw-blank-lv.png</href>
+        </Icon>
+      </IconStyle>
+      <LabelStyle>
+        <scale>0</scale>
+              </LabelStyle>
+      <LineStyle>
+        <color>ff7fffff</color>
+        <width>1.4</width>
+      </LineStyle>
+    </Style>}
   end
 end

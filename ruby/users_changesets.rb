@@ -128,11 +128,11 @@ def write_user_changesets(filename, cursor, db)
   puts "Found #{cnt} users"
 end
 
-def write_changeset_kml(filename, cursor, db)
+def write_changeset_kml(filename, cursor, db, title='KML FILE')
   puts "Attempting to write a kml file... this is new"
 
   file = KMLAuthor.new(filename)
-  file.write_header("Testing a KML file")
+  file.write_header(title)
   file.generate_random_styles(100)
 
   cnt = 0
@@ -153,8 +153,8 @@ def write_changeset_kml(filename, cursor, db)
           :geometry => this_user.edits[j],
           :time => changeset['closed_at'],
           :style =>"#r_style_#{random}",
-          :desc => %Q{Time: #{changeset['closed_at']}
-                      User: #{changeset['user']}
+          :desc => %Q{Time:  #{changeset['closed_at']}
+                      User:  #{changeset['user']}
                       Nodes: #{changeset['node_count']}}
         }
       end
@@ -179,6 +179,8 @@ if __FILE__ == $0
             "Name of output file"){|v| options.filename = v }
     opts.on("-l", "--limit [LIMIT]",
             "[Optional] Limit of users to parse"){|v| options.limit = v.to_i }
+    opts.on("-t", "--title [TITLE]",
+            "[Optional] Give a title for the KML document"){|v| options.title = v }
     opts.on_tail("-h", "--help", "Show this message") do
       puts opts
       exit
@@ -204,7 +206,7 @@ if __FILE__ == $0
 
   #write_user_bounding_envelopes(options.filename, uids, options.db)
   #write_user_changesets(options.filename, uids, options.db)
-  write_changeset_kml(options.filename, uids, options.db)
+  write_changeset_kml(options.filename, uids, options.db, title=options.title)
 
 
 end
