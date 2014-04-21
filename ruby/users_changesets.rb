@@ -27,11 +27,11 @@ class UserWithChangesets
                                   [120.0805664063, 9.3840321096] ]]}}
 
   @@query_time = {:haiti=>{
-                    :start=>Time.new(2010,1,12),
+                    :start=>Time.new(2006,1,0),
                     :end  =>Time.new(2010,1,31)},
 
                   :philippines=>{
-                    :start=>Time.new(2013,11,8),
+                    :start=>Time.new(2006,1,8),
                     :end  =>Time.new(2013,12,6)}
                  }
 
