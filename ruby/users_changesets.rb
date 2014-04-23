@@ -8,6 +8,8 @@ require 'geo_ruby/geojson'
 require 'geo_ruby/kml'
 require_relative 'write_geojson_featurecollection'
 require_relative 'kml_writer_helper'
+require 'rgeo'
+require 'rgeo/geo_json'
 
 class UserWithChangesets
 
@@ -27,11 +29,11 @@ class UserWithChangesets
                                   [120.0805664063, 9.3840321096] ]]}}
 
   @@query_time = {:haiti=>{
-                    :start=>Time.new(2006,1,1),
+                    :start=>Time.new(2010,1,8),
                     :end  =>Time.new(2010,1,31)},
 
                   :philippines=>{
-                    :start=>Time.new(2006,1,8),
+                    :start=>Time.new(2013,11,6),
                     :end  =>Time.new(2013,12,6)}
                  }
 
@@ -197,16 +199,33 @@ if __FILE__ == $0
   DB = mongo_conn[options.db]
   COLL = DB['changesets']
 
-  query = COLL.distinct("uid").first(options.limit)
-  uids = query.collect{|x| x.to_i}
 
-  size = uids.count()
+  query = COLL.find(selector = {},opts = {:limit=>options.limit})
 
-  puts "Processing #{size} Users"
+  #Define a factory for making our polygons
+  factory = RGeo::Geographic.projected_factory(:projection_proj4 =>
+  '+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs')
+
+  query.each do |changeset|
+    puts changeset["geometry"].to_json
+    obj = RGeo::GeoJSON.decode(changeset["geometry"].to_json, {:geo_factory=>factory, :json_parser=>:json})
+
+    puts obj.area
+
+  end
+
+  #Write the users to a kml
+
+  #query = COLL.distinct("uid").first(options.limit)
+  #uids = query.collect{|x| x.to_i}
+
+  #size = uids.count()
+
+  #puts "Processing #{size} Users"
 
   #write_user_bounding_envelopes(options.filename, uids, options.db)
   #write_user_changesets(options.filename, uids, options.db)
-  write_changeset_kml(options.filename, uids, options.db, title=options.title)
+  #write_changeset_kml(options.filename, uids, options.db, title=options.title)
 
 
 end
