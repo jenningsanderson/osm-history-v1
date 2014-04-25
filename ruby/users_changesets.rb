@@ -206,12 +206,25 @@ if __FILE__ == $0
   factory = RGeo::Geographic.projected_factory(:projection_proj4 =>
   '+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs')
 
-  query.each do |changeset|
-    puts changeset["geometry"].to_json
-    obj = RGeo::GeoJSON.decode(changeset["geometry"].to_json, {:geo_factory=>factory, :json_parser=>:json})
-
-    puts obj.area
-
+  query.each_with_index do |changeset, i|
+    unless changeset["geometry"].nil?
+      if changeset["geometry"]["type"] == "Polygon"
+        geo_obj = RGeo::GeoJSON.decode(changeset["geometry"].to_json, {:geo_factory=>factory, :json_parser=>:json})
+        area = geo_obj.area
+        unless area.nil?
+          area /= 1000000
+          unless changeset['node_count'].nil?
+            node_density = changeset['node_count'] / area
+          end
+        end
+      end
+      area ||= 1
+      node_density ||= 1
+      COLL.update({'_id' => changeset["_id"]}, {'$set' => {:area => area, :node_density=>node_density}})
+    end
+    if (i%1000).zero?
+      puts "Processed #{i} changesets"
+    end
   end
 
   #Write the users to a kml
