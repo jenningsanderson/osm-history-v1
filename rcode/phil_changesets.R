@@ -59,9 +59,9 @@ while(mongo.cursor.next(cursor)){
 }
 close(pb)
 
-hist(log(philChangesetInfo$node_count, base=10), col='blue', main="Phil: Frequency of Changesets with #Nodes", xlab="Log_10 Node Count", ylab="Freq")
-hist(log(philChangesetInfo$node_density, base=10), col='red', main="Phil: Frequency of Nodes/Area", xlab="Log_10 Changeset Count", ylab="Freq")
-hist(log(philChangesetInfo$area, base=10), col='purple', main="Phil: Frequency of Area Size (Sq. km)", xlab="Log_10 Changeset Count", ylab="Freq")
-hist(philChangesetInfo$created_at, breaks='day', col='orange', main="Phil: Times of Edits", xlab="When", ylab="Changesets")
+hist(log(changesetInfo$node_count, base=10), col='blue', main="Phil: Frequency of Changesets with #Nodes", xlab="Log_10 Node Count", ylab="Freq")
+hist(log(changesetInfo$node_density, base=10), col='red', main="Phil: Frequency of Nodes/Area", xlab="Log_10 Changeset Count", ylab="Freq")
+hist(log(changesetInfo$area, base=10), col='purple', main="Phil: Frequency of Area Size (Sq. km)", xlab="Log_10 Changeset Count", ylab="Freq")
+hist(changesetInfo$created_at, breaks='day', col='orange', main="Phil: Times of Edits", xlab="When", ylab="Changesets")
 
 

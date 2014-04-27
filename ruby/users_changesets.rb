@@ -30,7 +30,7 @@ class UserWithChangesets
 
   @@query_time = {:haiti=>{
                     :start=>Time.new(2010,1,8),
-                    :end  =>Time.new(2010,1,31)},
+                    :end  =>Time.new(2010,2,12)},
 
                   :philippines=>{
                     :start=>Time.new(2013,11,6),
@@ -48,6 +48,7 @@ class UserWithChangesets
   def get_changesets
     @changesets = COLL.find({:uid => @uid,
                              :closed_at=> {"$gt" => @@query_time[@db][:start], "$lt"=> @@query_time[@db][:end]},
+                             :area => {"$gt" => 1, "$lt"=>1000},
                              :geometry => {"$geoWithin"=>
                                  {"$geometry" => @@query_bb[@db]}}},
                             {:fields=>['geometry', 'id', 'closed_at', 'created_at', 'user', 'node_count']})
@@ -206,39 +207,40 @@ if __FILE__ == $0
   factory = RGeo::Geographic.projected_factory(:projection_proj4 =>
   '+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs')
 
-  query.each_with_index do |changeset, i|
-    unless changeset["geometry"].nil?
-      if changeset["geometry"]["type"] == "Polygon"
-        geo_obj = RGeo::GeoJSON.decode(changeset["geometry"].to_json, {:geo_factory=>factory, :json_parser=>:json})
-        area = geo_obj.area
-        unless area.nil?
-          area /= 1000000
-          unless changeset['node_count'].nil?
-            node_density = changeset['node_count'] / area
-          end
-        end
-      end
-      area ||= 1
-      node_density ||= 1
-      COLL.update({'_id' => changeset["_id"]}, {'$set' => {:area => area, :node_density=>node_density}})
-    end
-    if (i%1000).zero?
-      puts "Processed #{i} changesets"
-    end
-  end
 
-  #Write the users to a kml
+  '''Write geo data to the changeset'''
+  # query.each_with_index do |changeset, i|
+  #   unless changeset["geometry"].nil?
+  #     if changeset["geometry"]["type"] == "Polygon"
+  #       geo_obj = RGeo::GeoJSON.decode(changeset["geometry"].to_json, {:geo_factory=>factory, :json_parser=>:json})
+  #       area = geo_obj.area
+  #       unless area.nil?
+  #         area /= 1000000
+  #         unless changeset['node_count'].nil?
+  #           node_density = changeset['node_count'] / area
+  #         end
+  #       end
+  #     end
+  #     area ||= 1
+  #     node_density ||= 1
+  #     COLL.update({'_id' => changeset["_id"]}, {'$set' => {:area => area, :node_density=>node_density}})
+  #   end
+  #   if (i%1000).zero?
+  #     puts "Processed #{i} changesets"
+  #   end
+  # end
 
-  #query = COLL.distinct("uid").first(options.limit)
-  #uids = query.collect{|x| x.to_i}
 
-  #size = uids.count()
 
-  #puts "Processing #{size} Users"
+  '''Write the users to a kml'''
+  query = COLL.distinct("uid").first(options.limit)
+  uids = query.collect{|x| x.to_i}
+  size = uids.count()
+  puts "Processing #{size} Users"
 
   #write_user_bounding_envelopes(options.filename, uids, options.db)
   #write_user_changesets(options.filename, uids, options.db)
-  #write_changeset_kml(options.filename, uids, options.db, title=options.title)
+  write_changeset_kml(options.filename, uids, options.db, title=options.title)
 
 
 end

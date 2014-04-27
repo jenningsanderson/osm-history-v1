@@ -55,12 +55,12 @@ buildChangeset <- function(cursor){
 
 # Testing my functions
 
-#cursor = timeboxed_cursor(ISOdate(2012,01,12), ISOdate(2012,02,12), 'haiti.changesets', q_limit=500)
-#info = buildChangeset(cursor)
+cursor = timeboxed_cursor(ISOdate(2010,01,12), ISOdate(2010,02,12), 'haiti.changesets')
+info = buildChangeset(cursor)
 
-#hist(log(info$node_count, base=10), col='blue', main="Haiti: Frequency of Changesets with #Nodes", xlab="Log_10 Node Count", ylab="Freq")
-#hist(log(haitiChangesetInfo$node_density, base=10), col='red', main="Haiti: Frequency of Nodes/Area", xlab="Log_10 Changeset Count", ylab="Freq")
-#hist(log(haitiChangesetInfo$area, base=10), col='purple', main="Haiti: Frequency of Area Size (Sq. km)", xlab="Log_10 Changeset Count", ylab="Freq")
-#hist(haitiChangesetInfo$created_at, breaks='day', col='orange', main="Haiti: Times of Edits", xlab="When", ylab="Changesets")
+hist(log(info$node_count, base=10), col='blue', main="Haiti: Frequency of Changesets with #Nodes", xlab="Log_10 Node Count", ylab="Freq")
+hist(log(info$node_density, base=10), col='red', main="Haiti: Frequency of Nodes/Area", xlab="Log_10 Changeset Count", ylab="Freq")
+hist(log(info$area, base=10), col='purple', main="Haiti: Frequency of Area Size (Sq. km)", xlab="Log_10 Changeset Count", ylab="Freq")
+hist(info$created_at, breaks='day', col='orange', main="Haiti: Times of Edits", xlab="When", ylab="Changesets")
 
 
