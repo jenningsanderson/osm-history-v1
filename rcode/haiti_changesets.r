@@ -4,7 +4,8 @@ library(rmongodb) # Loads the mongodb library
 library(plyr)     # Need this for a dataframe
 
 # Connect to MongoDB
-mongo = mongo.create(host = "epic-analytics.cs.colorado.edu:27018")
+#mongo = mongo.create(host = "epic-analytics.cs.colorado.edu:27018")
+mongo = mongo.create(host = 'localhost')
 mongo.is.connected(mongo)
 
 
@@ -40,11 +41,16 @@ buildChangeset <- function(cursor){
   changesetInfo = data.frame(stringsAsFactors = FALSE)
   pb <- txtProgressBar(min = 0, max = size, style = 3)
   i <- 0
+  
+  test_arr <- array(0, c(1,5,size))
+  
   while(mongo.cursor.next(cursor)){
     #Read the value
     tmp = mongo.bson.to.list(mongo.cursor.value(cursor))
+    
+    test_arr[i] <- tmp
     # Add it to the dataframe
-    changesetInfo = rbind.fill(changesetInfo, as.data.frame(tmp))
+    #changesetInfo = rbind.fill(changesetInfo, as.data.frame(tmp))
     #Show the status message
     i = i+1
     setTxtProgressBar(pb, i)
@@ -55,7 +61,7 @@ buildChangeset <- function(cursor){
 
 # Testing my functions
 
-cursor = timeboxed_cursor(ISOdate(2010,01,12), ISOdate(2010,02,12), 'haiti.changesets')
+cursor = timeboxed_cursor(ISOdate(2010,01,12), ISOdate(2010,02,12), 'haiti.changesets', q_limit=10)
 info = buildChangeset(cursor)
 
 hist(log(info$node_count, base=10), col='blue', main="Haiti: Frequency of Changesets with #Nodes", xlab="Log_10 Node Count", ylab="Freq")

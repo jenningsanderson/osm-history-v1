@@ -1,4 +1,3 @@
-
 require 'mongo'
 require 'optparse'
 require 'json'
@@ -12,6 +11,7 @@ require 'rgeo'
 require 'rgeo/geo_json'
 
 class UserWithChangesets
+  '''Defining the characteristics of each dataset'''
 
   @@query_bb = {:haiti =>
                {"type" => "Polygon",
@@ -49,12 +49,13 @@ class UserWithChangesets
     @changesets = COLL.find({:uid => @uid,
                              :closed_at=> {"$gt" => @@query_time[@db][:start], "$lt"=> @@query_time[@db][:end]},
                              :area => {"$gt" => 1, "$lt"=>1000},
+                             :node_density => {'$gt' => 1 },
                              :geometry => {"$geoWithin"=>
                                  {"$geometry" => @@query_bb[@db]}}},
                             {:fields=>['geometry', 'id', 'closed_at', 'created_at', 'user', 'node_count']})
     @changeset_count = @changesets.count()
-    @properties = {:uid => @uid, :changesets => @changeset_count}
     unless @changeset_count.zero?
+      @properties = {:uid => @uid, :changesets => @changeset_count, :user => @changesets.first['user']}
       return true
     end
   end
@@ -132,7 +133,7 @@ def write_user_changesets(filename, cursor, db)
 end
 
 def write_changeset_kml(filename, cursor, db, title='KML FILE')
-  puts "Attempting to write a kml file... this is new"
+  puts "Writing user changesets to KML"
 
   file = KMLAuthor.new(filename)
   file.write_header(title)
@@ -146,7 +147,7 @@ def write_changeset_kml(filename, cursor, db, title='KML FILE')
       cnt+=1
       this_user.process_geometries
 
-      this_folder = {:name=>uid, :features=>[]}
+      this_folder = {:name=>this_user.properties[:user], :features=>[]}
 
       random = rand(100) #Set a random color for this user
 
@@ -164,7 +165,7 @@ def write_changeset_kml(filename, cursor, db, title='KML FILE')
       file.write_folder(this_folder)
     end
     if (i%10).zero?
-      puts "Processed #{i} users"
+      puts "Processed #{i} users, found #{cnt} users to match description"
     end
   end
   file.write_footer
@@ -196,41 +197,13 @@ if __FILE__ == $0
   end
   options.limit ||= 100000
 
-  mongo_conn = Mongo::MongoClient.new('epic-analytics.cs.colorado.edu','27018')
+  #mongo_conn = Mongo::MongoClient.new('epic-analytics.cs.colorado.edu','27018')
+  mongo_conn = Mongo::MongoClient.new #Defaults to localhost
   DB = mongo_conn[options.db]
   COLL = DB['changesets']
 
 
   query = COLL.find(selector = {},opts = {:limit=>options.limit})
-
-  #Define a factory for making our polygons
-  factory = RGeo::Geographic.projected_factory(:projection_proj4 =>
-  '+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs')
-
-
-  '''Write geo data to the changeset'''
-  # query.each_with_index do |changeset, i|
-  #   unless changeset["geometry"].nil?
-  #     if changeset["geometry"]["type"] == "Polygon"
-  #       geo_obj = RGeo::GeoJSON.decode(changeset["geometry"].to_json, {:geo_factory=>factory, :json_parser=>:json})
-  #       area = geo_obj.area
-  #       unless area.nil?
-  #         area /= 1000000
-  #         unless changeset['node_count'].nil?
-  #           node_density = changeset['node_count'] / area
-  #         end
-  #       end
-  #     end
-  #     area ||= 1
-  #     node_density ||= 1
-  #     COLL.update({'_id' => changeset["_id"]}, {'$set' => {:area => area, :node_density=>node_density}})
-  #   end
-  #   if (i%1000).zero?
-  #     puts "Processed #{i} changesets"
-  #   end
-  # end
-
-
 
   '''Write the users to a kml'''
   query = COLL.distinct("uid").first(options.limit)
@@ -238,9 +211,38 @@ if __FILE__ == $0
   size = uids.count()
   puts "Processing #{size} Users"
 
+  write_changeset_kml(options.filename, uids, options.db, title=options.title)
+
+  '''Deprecated fileio'''
   #write_user_bounding_envelopes(options.filename, uids, options.db)
   #write_user_changesets(options.filename, uids, options.db)
-  write_changeset_kml(options.filename, uids, options.db, title=options.title)
 
 
 end
+
+'''Deprecated functionality'''
+
+'''Write geo data to the changeset'''
+#Define a factory for making our polygons
+#factory = RGeo::Geographic.projected_factory(:projection_proj4 =>
+#'+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs')
+# query.each_with_index do |changeset, i|
+#   unless changeset["geometry"].nil?
+#     if changeset["geometry"]["type"] == "Polygon"
+#       geo_obj = RGeo::GeoJSON.decode(changeset["geometry"].to_json, {:geo_factory=>factory, :json_parser=>:json})
+#       area = geo_obj.area
+#       unless area.nil?
+#         area /= 1000000
+#         unless changeset['node_count'].nil?
+#           node_density = changeset['node_count'] / area
+#         end
+#       end
+#     end
+#     area ||= 1
+#     node_density ||= 1
+#     COLL.update({'_id' => changeset["_id"]}, {'$set' => {:area => area, :node_density=>node_density}})
+#   end
+#   if (i%1000).zero?
+#     puts "Processed #{i} changesets"
+#   end
+# end
