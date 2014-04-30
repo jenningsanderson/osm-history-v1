@@ -2,6 +2,7 @@
 
 library(rmongodb) # Loads the mongodb library
 library(plyr)     # Need this for a dataframe
+library(data.table)
 
 # Connect to MongoDB
 #mongo = mongo.create(host = "epic-analytics.cs.colorado.edu:27018")
@@ -33,57 +34,63 @@ timeboxed_cursor <- function(startDate, endDate, DBNS, q_limit=500000){
   
   cursor <- mongo.find(mongo, ns=DBNS, query=query, fields=fields, limit=q_limit, options=mongo.find.exhaust)
   size <<- mongo.count(mongo, ns=DBNS, query)
+  if (size == -1){
+    size <<- q_limit
+  }
   return(cursor)
 }
 
-# Attempting to improve performance: http://stackoverflow.com/questions/11561856/add-new-row-to-dataframe
-#insertRow <- function(existingDF, newrow, r) {
-  existingDF[seq(r+1,nrow(existingDF)+1),] <- existingDF[seq(r,nrow(existingDF)),]
-  existingDF[r,] <- newrow
-  existingDF
-}
-
+is.not.null <- function(x) ! is.null(x)
 
 buildChangeset <- function(cursor){
-  # Start the dataframe here
-  mongo.cursor.next(cursor) # Populate dataframe with first value
-  tmp = mongo.bson.to.list(mongo.cursor.value(cursor))
-  changesetInfo = data.frame(stringsAsFactors = FALSE)
-  changesetInfo = rbind.fill(changesetInfo, as.data.frame(tmp))
-  
+  dt <- data.table(uid=rep(NA_integer_, size),
+                   node_count=rep(NA_integer_, size),
+                   node_density=rep(NA_real_,size),
+                   area=rep(NA_real_,size),
+                   created_at=rep(Sys.time(),size))
+  i <- 1L
   pb <- txtProgressBar(min = 0, max = size, style = 3)
-  i  <- 1
-  
-  while(mongo.cursor.next(cursor)){
-    #Read the value & Use the faster function to add to dataframe
-    newrow = as.data.frame(mongo.bson.to.list(mongo.cursor.value(cursor)))
-    #changesetInfo = insertRow(changesetInfo, newrow, 1)
-    changesetInfo = rbind.fill(changesetInfo, newrow) #This is a slow function, but I don't know a better way to do it
-    # Show the status message
-    i = i+1
+  while (mongo.cursor.next(cursor)) {
+    
+    #Capture the value of the cursor to the variable 'b'
+    b <- mongo.cursor.value(cursor)
+    
+    ## Actually write the values from Mongo to a table -- this is as efficient as it can be -- but wish I coul dynamically code it.
+    
+    #UID
+    uid <- mongo.bson.value(b, "uid")
+    if (is.not.null(uid)){
+      set(dt, i, 'uid',  uid)
+    }
+    
+    #Node Count
+    node_count <- mongo.bson.value(b, "node_count")
+    if (is.not.null(node_count)){
+      set(dt, i, 'node_count',  node_count)
+    }
+    
+    #Node Density
+    node_density <- mongo.bson.value(b, "node_density")
+    if (is.not.null(node_density)){
+      set(dt, i, 'node_density',  node_density)
+    }
+    
+    #User ID
+    area <- mongo.bson.value(b, "area")
+    if (is.not.null(area)){
+      set(dt, i, 'area',  area)
+    }
+    
+    #Date it was created
+    created_at <- mongo.bson.value(b, "created_at")
+    if (is.not.null(created_at)){
+      set(dt, i, 'created_at',  created_at)
+    }
+
+    i <- i+1L
     setTxtProgressBar(pb, i)
   }
-  close(pb)
-  return(changesetInfo)
-}
-
-buildChangeset2 <- function(cursor){
-  dt <- data.table(uid=rep("0",size),
-                   node_count=rep(0,size),
-                   created_at=rep("NA",size),
-                   node_density=rep(0,size),
-                   area=rep(0,size))
-  i <- 1
-  while (mongo.cursor.next(cursor)) {
-    b <- mongo.cursor.value(cursor)
-    set(dt, i, 1L,  mongo.bson.value(b, "uid"))
-    set(dt, i, 2L,  mongo.bson.value(b, "node_count"))
-    set(dt, i, 3L,  mongo.bson.value(b, "node_density"))
-    set(dt, i, 4L,  mongo.bson.value(b, "created_at"))
-    set(dt, i, 5L,  mongo.bson.value(b, "area"))
-    i <- i+1
-  }
-  return(dt)
+  return(data.frame(dt))
 }
 
 # Testing my functions
@@ -95,4 +102,34 @@ info = buildChangeset2(cursor)
 #hist(log(info$area, base=10), col='purple', main="Haiti: Frequency of Area Size (Sq. km)", xlab="Log_10 Changeset Count", ylab="Freq")
 #hist(info$created_at, breaks='day', col='orange', main="Haiti: Times of Edits", xlab="When", ylab="Changesets")
 
+# Attempting to improve performance: http://stackoverflow.com/questions/11561856/add-new-row-to-dataframe
+# insertRow <- function(existingDF, newrow, r) {
+#   existingDF[seq(r+1,nrow(existingDF)+1),] <- existingDF[seq(r,nrow(existingDF)),]
+#   existingDF[r,] <- newrow
+#   existingDF
+# }
+# 
+# 
+# buildChangeset <- function(cursor){
+#   # Start the dataframe here
+#   mongo.cursor.next(cursor) # Populate dataframe with first value
+#   tmp = mongo.bson.to.list(mongo.cursor.value(cursor))
+#   changesetInfo = data.frame(stringsAsFactors = FALSE)
+#   changesetInfo = rbind.fill(changesetInfo, as.data.frame(tmp))
+#   
+#   pb <- txtProgressBar(min = 0, max = size, style = 3)
+#   i  <- 1
+#   
+#   while(mongo.cursor.next(cursor)){
+#     #Read the value & Use the faster function to add to dataframe
+#     newrow = as.data.frame(mongo.bson.to.list(mongo.cursor.value(cursor)))
+#     #changesetInfo = insertRow(changesetInfo, newrow, 1)
+#     changesetInfo = rbind.fill(changesetInfo, newrow) #This is a slow function, but I don't know a better way to do it
+#     # Show the status message
+#     i = i+1
+#     setTxtProgressBar(pb, i)
+#   }
+#   close(pb)
+#   return(changesetInfo)
+# }
 
