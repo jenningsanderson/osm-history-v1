@@ -37,7 +37,7 @@ class UserWithChangesets
                     :end  =>Time.new(2013,12,6)}
                  }
 
-  attr_reader :uid, :properties, :edits, :changesets
+  attr_reader :uid, :properties, :edits, :changesets, :changeset_count
 
   def initialize(uid, db)
     @uid = uid
@@ -211,18 +211,66 @@ if __FILE__ == $0
   size = uids.count()
   puts "Processing #{size} Users"
 
-  write_changeset_kml(options.filename, uids, options.db, title=options.title)
+  #write_changeset_kml(options.filename, uids, options.db, title=options.title)
 
-  '''Deprecated fileio'''
-  #write_user_bounding_envelopes(options.filename, uids, options.db)
-  #write_user_changesets(options.filename, uids, options.db)
+  #Find user contributions
+  users = []
+  query.each do |uid|
+    user = UserWithChangesets.new(uid, options.db)
+    user.get_changesets
+    users << user
+  end
+
+  sorted = users.sort_by { |user| user.changeset_count}
+
+  sorted.reverse!.first(10).each do |user|
+    puts "#{user.properties[:user]}: #{user.changeset_count}"
+  end
+
 
 
 end
 
-'''Deprecated functionality'''
 
-'''Write geo data to the changeset'''
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+'''Deprecated FileIO'''
+#write_user_bounding_envelopes(options.filename, uids, options.db)
+#write_user_changesets(options.filename, uids, options.db)
+
+'''Deprecated GeoData Addition'''
 #Define a factory for making our polygons
 #factory = RGeo::Geographic.projected_factory(:projection_proj4 =>
 #'+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs')
