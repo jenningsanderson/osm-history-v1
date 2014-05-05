@@ -52,11 +52,22 @@ db.changesets.find({"geometry.coordinates" : [ [ [ 0.0, 0.0 ], [ 0.0, 0.0 ], [ 0
 })
 
 
-	
-
-
-
-
-
-
-
+//Add joining date to the users changeset
+var missing = 0
+var size = db.changesets.count()
+var cnt = 0
+db.changesets.find().forEach(function(changeset){
+	var doc = db.users.findOne({uid : changeset.uid.toString()})
+	if (doc!= undefined){
+		var join = doc.joiningdate
+		db.changesets.update({id : changeset.id}, {$set : {userjoin : join}})
+		changeset.save
+	}
+	else{
+		missing++
+	}
+	cnt++
+	if(cnt%100==0){
+		print("Left: "+(size-cnt).toString())
+	}
+});

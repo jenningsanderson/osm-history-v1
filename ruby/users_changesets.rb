@@ -75,7 +75,9 @@ class UserWithChangesets
   def bounding_box_envelope
     envelope = @bounding_box.envelope #=> Will have to turn this into a valid geojson polygon
 
-    GeoRuby::SimpleFeatures::Polygon.from_coordinates(
+    factory = RGeo::Geographic.projected_factory(:projection_proj4 =>
+    '+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs')
+    @bbox = GeoRuby::SimpleFeatures::Polygon.from_coordinates(
       [[[envelope.lower_corner.x, envelope.lower_corner.y],
         [envelope.lower_corner.x, envelope.upper_corner.y],
         [envelope.upper_corner.x, envelope.upper_corner.y],

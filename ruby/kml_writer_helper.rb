@@ -1,7 +1,6 @@
 require 'mongo'
 require 'optparse'
 require 'json'
-require 'time'
 require 'georuby'
 require 'geo_ruby/geojson'
 require 'geo_ruby/kml'
@@ -114,10 +113,10 @@ class KMLAuthor
       #Point
       @openfile.write %Q{\t<IconStyle>
         <color>77#{color}</color>
-         <scale>.5</scale>
+         <scale>.3</scale>
          <Icon>http://maps.google.com/mapfiles/kml/paddle/wht-blank-lv.png</Icon>
           <LabelStyle>
-            <scale>0</scale>
+            <scale>.1</scale>
           </LabelStyle>
     </IconStyle>\n}
 

@@ -1,0 +1,38 @@
+Changeset Analysis
+========================================================
+Looking at OSM changeset density
+
+```{r import_changeset_analysis, echo=FALSE, results='hide', message=FALSE}
+source("/Users/jenningsanderson/Dropbox/OSM/osm-history/rcode/changesets_analysis.r")
+
+#Philippines
+phil_cursor = custom_timeboxed_cursor(ISOdate(2013,11,08), ISOdate(2013,12,08), 'philippines.changesets')
+phil_info = buildChangeset(phil_cursor)
+
+#Haiti
+haiti_cursor = custom_timeboxed_cursor(ISOdate(2010,01,12), ISOdate(2010,02,12), 'haiti.changesets')
+haiti_info = buildChangeset(haiti_cursor)
+
+#Combine the DFs:
+phil_info$Country  = "Philippines"
+haiti_info$Country = "Haiti"
+
+dat = rbind(phil_info, haiti_info)
+```
+
+### Plot Node count vs area
+```{r fig.width=12, count_v_area, message=FALSE, warning=FALSE}
+ggplot(aes(x = log(node_count), y = log(area), color=Country), data=dat) +  geom_point(shape=19, alpha=1/2)
+```
+
+### Plotting Node Density against user joining date
+```{r fig.width=12, density, message=FALSE, warning=FALSE}
+#Plot them against eachother:
+ggplot(aes(x = userjoin, y = log(node_density), color=Country), data=dat) +  geom_point(shape=19,alpha=1/2)
+```
+
+
+
+```{r fig.width=12, phil_plot, message=FALSE}
+plot(x = phil_info$userjoin, y = phil_info$node_density, main="Philippines: Density vs. when joined")
+```
