@@ -31,7 +31,7 @@ class GetNodeGeometries
   def hit_nodes_collection
     @sets.each do |set|
       query = DB['nodes'].find(selector = {'properties.changeset'=>set}, opts = {:fields => ['geometry', 'date', 'properties.user']})
-      unless query.count.zero?
+      if query.count > 1 and query.count < 10000 #Only get those that we can really use
         @name = query.each.first['properties']['user']
         query.rewind! #Put it back to beginning...
 
@@ -96,8 +96,8 @@ if __FILE__ == $0
   end
   options.limit ||= 100000
 
-  #mongo_conn = Mongo::MongoClient.new('epic-analytics.cs.colorado.edu','27018')
-  mongo_conn = Mongo::MongoClient.new #Defaults to localhost (For offline use)
+  mongo_conn = Mongo::MongoClient.new('epic-analytics.cs.colorado.edu','27018')
+  #mongo_conn = Mongo::MongoClient.new #Defaults to localhost (For offline use)
   DB = mongo_conn[options.db]
   COLL = DB['changesets']
 
@@ -133,7 +133,7 @@ if __FILE__ == $0
 
     #Iterate over each of the distinct users.
     uids.each_with_index do |uid, counter|
-      #begin
+      begin
         print "Starting User: #{uid}"
         #Get user's changeset
         this_uid = {:id=>uid,
@@ -195,11 +195,11 @@ if __FILE__ == $0
         end
         #Write the user folder
         file.write_folder(this_user)
-      # rescue
-      #    p $!
-      #    puts caller
-      #    puts "Error occured, moving onto next user"
-      #end
+       rescue
+          p $!
+          puts caller
+          puts "Error occured, moving onto next user"
+      end
     end #End user iterator
 
     puts "Writing footer of KML file"

@@ -3,9 +3,25 @@ Changeset Analysis
 Looking at OSM changeset density
 
 
+Part 1: Load the Data
+-------------------------------------------------------
 
 
-Load the Data from the disaster window CSV
+
+1. Load the entire Data from the disaster window CSV
+
+
+
+
+
+2. Load some small sample data, this is data from 25 random users in each data set.
+
+
+
+
+
+3. For more data, load a larger sample: 75 users from each set.
+
 
 
 
@@ -14,58 +30,17 @@ Philippines
 
 ```r
 summary(philippines$node_count)
-```
-
-```
-##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##       1       4      16     103      78   19400
-```
-
-```r
 summary(philippines$area)
-```
-
-```
-##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##       0       0       0      99       0  301000
-```
-
-```r
 summary(philippines$density)
 ```
 
-```
-##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##       0     110    1130   15600   16400 2040000
-```
 
 Haiti
 
 ```r
 summary(haiti$node_count)
-```
-
-```
-##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##       1       6      31     114      99   46500
-```
-
-```r
 summary(haiti$area)
-```
-
-```
-##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##       0       0       0     173       3   69200
-```
-
-```r
 summary(haiti$density)
-```
-
-```
-##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
-## 0.00e+00 7.00e+00 5.80e+01 1.18e+05 2.77e+02 9.64e+08
 ```
 
 
@@ -90,11 +65,12 @@ ggplot(data = dat, aes(x = log(node_count), y = log(area), color = Country)) +
 ### Histogram of densities
 
 ```r
-ggplot(dat, aes(log(density), fill = Country)) + geom_histogram(alpha = 0.5, 
+ggplot(dat[dat$density > 1, ], aes(log(density), fill = Country)) + geom_histogram(alpha = 0.5, 
     binwidth = 0.1, position = "identity")
 ```
 
-![plot of chunk unnamed-chunk-4](figure/unnamed-chunk-4.png) 
+![plot of chunk unnamed-chunk-6](figure/unnamed-chunk-6.png) 
+
 
 
 

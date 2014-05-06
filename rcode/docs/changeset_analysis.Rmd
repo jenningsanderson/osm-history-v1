@@ -2,6 +2,9 @@ Changeset Analysis
 ========================================================
 Looking at OSM changeset density
 
+
+Part 1: Load the Data
+-------------------------------------------------------
 ```{r import_changeset_analysis, echo=FALSE, results='hide', message=FALSE}
 #Load Data from Mongo?  No.
 #source("/Users/jenningsanderson/Dropbox/OSM/osm-history/rcode/changesets_analysis.r")
@@ -21,8 +24,8 @@ Looking at OSM changeset density
 #dat = rbind(phil_info, haiti_info)
 ```
 
-Load the Data from the disaster window CSV
-```{r initial_load, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
+1. Load the entire Data from the disaster window CSV
+```{r initial_load, echo=FALSE, results='show', message=FALSE, warning=FALSE}
 #Load libraries
 library(ggplot2)
 
@@ -34,18 +37,63 @@ haiti       = read.csv("/Users/jenningsanderson/Google Drive/OSM-Haiti-Philippin
 philippines$Country  = "Philippines"
 haiti$Country        = "Haiti"
 
+#Add the date adjust
+haiti = adjustDate(haiti, ISOdate(2010,1,12))
+philippines = adjustDate(philippines, ISOdate(2013,11,08))
+
 dat = rbind(philippines, haiti)
+```
+
+
+
+2. Load some small sample data, this is data from 25 random users in each data set.
+```{r echo=FALSE}
+phil_sample_data = read.csv("/Users/jenningsanderson/Google Drive/OSM-Haiti-Philippines-SocialComputing/data/users_changesets/phil_sample_data.csv")
+haiti_sample_data = read.csv("/Users/jenningsanderson/Google Drive/OSM-Haiti-Philippines-SocialComputing/data/users_changesets/haiti_sample_data.csv")
+
+haiti_sample_data$Country = "Haiti"
+phil_sample_data$Country = "Philippines"
+
+sample_dat = rbind(haiti_sample_data, phil_sample_data)
+```
+
+
+
+3. For more data, load a larger sample: 75 users from each set.
+```{r echo=FALSE}
+phil_75_sample_data = read.csv("/Users/jenningsanderson/Google Drive/OSM-Haiti-Philippines-SocialComputing/data/users_changesets/phil_75_sample_data.csv")
+haiti_75_sample_data = read.csv("/Users/jenningsanderson/Google Drive/OSM-Haiti-Philippines-SocialComputing/data/users_changesets/haiti_75_sample_data.csv")
+
+
+haiti_75_sample_data$Country = "Haiti"
+phil_75_sample_data$Country = "Philippines"
+
+haiti_75_sample_data = adjustDate(haiti_75_sample_data, ISOdate(2010,1,12))
+phil_75_sample_data = adjustDate(phil_75_sample_data, ISOdate(2013,11,08))
+
+sample_dat75 = rbind(haiti_75_sample_data, phil_75_sample_data)
+```
+
+4. Load only changesets with less than 1000 nodes (still has the 1 node)
+
+```{r echo=FALSE}
+
+adjustDate <- function(dataframe, date){
+  dataframe$DaysSinceEvent = as.numeric(as.Date(dataframe$date) - as.Date(date))
+  return(dataframe)
+}
 ```
 
 ### Summary Statistics of the data
 Philippines
-```{r}
+```{r results='hide'}
 summary(philippines$node_count)
 summary(philippines$area)
 summary(philippines$density)
 ```
+
 Haiti
-```{r}
+```{r results = 'hide'}
 summary(haiti$node_count)
 summary(haiti$area)
 summary(haiti$density)
@@ -58,15 +106,16 @@ log <- function(x) ifelse(x <= 0, 0, base::log(x)) #Redefine log to return 0 whe
 
 ### Plot Node count vs area
 ```{r fig.width=12, another_test, message=FALSE, warning=FALSE}
-ggplot(data=dat, aes(x = log(node_count), y = log(area), color=Country) ) + 
+ggplot(data=dat[dat$area != 1,], aes(x = log(area), y = log(density), color=Country) ) + 
   geom_point(shape=19, alpha=1/2) +
-  stat_smooth(aes(x = log(node_count), y = log(area), color=Country), method = "lm", formula = y ~ x, size = 1)
+  stat_smooth(method = "lm", size = 1)
 ```
 
 ### Histogram of densities
 ```{r}
-ggplot(dat, aes(log(density), fill = Country)) + geom_histogram(alpha = 0.5, binwidth=.1, position = 'identity')
+ggplot(dat[dat$density != 1,], aes(log(density), fill = Country)) + geom_histogram(alpha = 0.5, binwidth=.1, position = 'identity')
 ```
+
 
 ```{r echo=FALSE} 
 #[sample(nrow(dat),10000),]
@@ -74,9 +123,9 @@ ggplot(dat, aes(log(density), fill = Country)) + geom_histogram(alpha = 0.5, bin
 
 ### What about just density overtime?
 ```{r fig.width=12, count_v_area, message=FALSE, warning=FALSE}
-ggplot(data=dat[dat$area > 1, ], aes(x = log(area), y = log(density), color=Country) ) + 
+ggplot(data=dat[dat$density != 1, ], aes(x = DaysSinceEvent, y = log(density), color=Country) ) + 
   geom_point(shape=19, alpha=1/2) +
-  stat_smooth(method = "lm", size = 1)
+  stat_smooth(method = "loess", size = 1)
 ```
 
 
