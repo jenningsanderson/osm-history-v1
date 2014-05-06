@@ -109,6 +109,10 @@ class KMLAuthor
 
       #Open the Style
       @openfile.write "<Style id=\"r_style_#{id}\">\n"
+      @openfile.write %Q{\t<LabelStyle>
+        <scale>0</scale>
+    </LabelStyle>
+      }
 
       #Point
       @openfile.write %Q{\t<IconStyle>

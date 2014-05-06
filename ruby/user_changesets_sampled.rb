@@ -1,10 +1,14 @@
+'''
+This script takes user samples from the OSM changeset.
+
+'''
 require 'mongo'
 require 'optparse'
 require 'rgeo'
 require 'rgeo/geo_json'
+require 'csv'
 
 require_relative 'kml_writer_helper' #Eventually, this will be wrapped into the epic-geo gem
-#require_relative 'users_changesets'  #Using the existing changeset information from this script.
 
 
 class GetNodeGeometries
@@ -27,34 +31,41 @@ class GetNodeGeometries
   def hit_nodes_collection
     @sets.each do |set|
       query = DB['nodes'].find(selector = {'properties.changeset'=>set}, opts = {:fields => ['geometry', 'date', 'properties.user']})
-      @name = query.each.first['properties']['user']
-      query.rewind! #Put it back to beginning...
+      unless query.count.zero?
+        @name = query.each.first['properties']['user']
+        query.rewind! #Put it back to beginning...
 
-      @set_geometries[set] ||= []
+        @set_geometries[set] ||= []
 
-      query.each do |node_geometry|
-        @set_geometries[set] << {
-          :geometry=>GeoRuby::SimpleFeatures::Geometry.from_geojson(node_geometry['geometry'].to_json),
-          :properties=>{:date=>node_geometry['date']}}
-      end
-      this_bbox = GeoRuby::SimpleFeatures::GeometryCollection.from_geometries(@set_geometries[set].collect{|obj| obj[:geometry]})
-      envelope = this_bbox.envelope
-      time = COLL.find({'id'=>set},{:fields=>['created_at']}).first
-      bbox =GeoRuby::SimpleFeatures::Polygon.from_coordinates(
-        [[[envelope.lower_corner.x, envelope.lower_corner.y],
-          [envelope.lower_corner.x, envelope.upper_corner.y],
-          [envelope.upper_corner.x, envelope.upper_corner.y],
-          [envelope.upper_corner.x, envelope.lower_corner.y],
-          [envelope.lower_corner.x, envelope.lower_corner.y]]] )
-      area = convert_to_rgeo(bbox).area/1000000
-      density = @set_geometries[set].size / area
-      @changeset_bboxes << {:time => time['created_at'], :bbox => bbox, :area => area.round(2), :density =>density.round(2)}
+        query.each do |node_geometry|
+          @set_geometries[set] << {
+            :geometry=>GeoRuby::SimpleFeatures::Geometry.from_geojson(node_geometry['geometry'].to_json),
+            :properties=>{:date=>node_geometry['date']}}
+        end
+        this_bbox = GeoRuby::SimpleFeatures::GeometryCollection.from_geometries(@set_geometries[set].collect{|obj| obj[:geometry]})
+        envelope = this_bbox.envelope
+        time = COLL.find({'id'=>set},{:fields=>['created_at']}).first
+        bbox =GeoRuby::SimpleFeatures::Polygon.from_coordinates(
+          [[[envelope.lower_corner.x, envelope.lower_corner.y],
+            [envelope.lower_corner.x, envelope.upper_corner.y],
+            [envelope.upper_corner.x, envelope.upper_corner.y],
+            [envelope.upper_corner.x, envelope.lower_corner.y],
+            [envelope.lower_corner.x, envelope.lower_corner.y]]] )
+        area = convert_to_rgeo(bbox).area/1000000
+        count = @set_geometries[set].size
+        density = count / area
+        if density == Float::INFINITY
+          density = 1
+        end
+        @changeset_bboxes << {:time => time['created_at'], :bbox => bbox, :area => area.round(2), :count=>count, :density =>density.round(2)}
+      end #End the unless
     end
   end
 end
 
-
-''' RUNTIME '''
+####################################################
+############   Implicit Runtime    #################
+####################################################
 
 if __FILE__ == $0
   options = OpenStruct.new
@@ -67,6 +78,8 @@ if __FILE__ == $0
             "Name of output file"){|v| options.filename = v }
     opts.on("-w", "--what What to write (n,p,b)",
             "What to write to KML: nodes (p), polygons (p), or both (b)"){|v| options.what = v }
+    opts.on("-c", "--csv Write csv (t or f)",
+            "Write to CSV output"){|v| options.csv = v }
     opts.on("-l", "--limit [LIMIT]",
             "[Optional] Limit of users to parse"){|v| options.limit = v.to_i }
     opts.on("-t", "--title [TITLE]",
@@ -113,73 +126,84 @@ if __FILE__ == $0
   file.write_header(options.title)
   file.generate_random_styles(options.limit)
 
+  #Start the CSV Output
+  puts "Opening the CSV for writing"
+  CSV.open(options.filename+'_data.csv','w') do |csv|
+    csv << ['user', 'node_count', 'area', 'density', 'date']
 
-  # Main processing happens here
+    #Iterate over each of the distinct users.
+    uids.each_with_index do |uid, counter|
+      #begin
+        print "Starting User: #{uid}"
+        #Get user's changeset
+        this_uid = {:id=>uid,
+                    :changesets=>COLL.distinct('id',
+          {'uid'=>uid, 'created_at'=>{'$gt'=>TIMES[options.db.to_sym][:start],
+                                      '$lt'=>TIMES[options.db.to_sym][:end]}})}
 
-  #Iterate over each of the distinct users.
-  uids.each_with_index do |uid, counter|
-    begin
-      print "Starting User: #{uid}"
-      #Get user's changeset
-      this_uid = {:id=>uid,
-                  :changesets=>COLL.distinct('id',
-        {'uid'=>uid, 'created_at'=>{'$gt'=>TIMES[options.db.to_sym][:start],
-                                    '$lt'=>TIMES[options.db.to_sym][:end]}})}
+        #Process geometries
+        this_uid[:geometries] = GetNodeGeometries.new(this_uid)
+        this_uid[:geometries].hit_nodes_collection
+        this_uid[:name] = this_uid[:geometries].name
 
-      #Process geometries
-      this_uid[:geometries] = GetNodeGeometries.new(this_uid)
-      this_uid[:geometries].hit_nodes_collection
-      this_uid[:name] = this_uid[:geometries].name
+        print "...done #{uid}; now writing: #{this_uid[:name]}...(#{(counter*1.0/size*100).round(2)}%)\n"
+        this_user = {:name => this_uid[:name], :folders=>[]}
 
-      print "...done #{uid}; now writing: #{this_uid[:name]}\n"
-      this_user = {:name => this_uid[:name], :folders=>[]}
+        random = rand(options.limit) #Set a random color for this user
 
-      random = rand(options.limit) #Set a random color for this user
+        #Go through each of their changesets, building subfolders
+        index = 0
+        this_uid[:geometries].set_geometries.each do |k,v|
 
-      #Go through each of their changesets, building subfolders
-      index = 0
-      this_uid[:geometries].set_geometries.each do |k,v|
+          #Write to csv
+          csv << [ this_uid[:name],
+                   this_uid[:geometries].changeset_bboxes[index][:count],
+                   this_uid[:geometries].changeset_bboxes[index][:area],
+                   this_uid[:geometries].changeset_bboxes[index][:density],
+                   this_uid[:geometries].changeset_bboxes[index][:time]
+                 ]
 
-        #Make a new folder for this changeset
-        changeset_folder = {:name => k, :features=>[]}
+          #Make a new folder for this changeset
+          changeset_folder = {:name => k, :features=>[]}
 
-        #Each changeset folder gets a geometry feature for the node
-        if options.what == 'p' or options.what == 'b'
-          changeset_folder[:features] <<{
-            :name => k,
-            :geometry => this_uid[:geometries].changeset_bboxes[index][:bbox],
-            :time => this_uid[:geometries].changeset_bboxes[index][:time],
-            :style =>"#r_style_#{random}",
-            :desc => %Q{Area:    #{this_uid[:geometries].changeset_bboxes[index][:area]}
-                        Density: #{this_uid[:geometries].changeset_bboxes[index][:density]}
-                        User:    #{this_uid[:name]}}
-          }
-        end
-        if options.what == 'n' or options.what == 'b'
-          v.each do |geometry|
-            changeset_folder[:features] << {
+          #Each changeset folder gets a geometry feature for the node
+          if options.what == 'p' or options.what == 'b'
+            changeset_folder[:features] <<{
               :name => k,
-              :geometry => geometry[:geometry],
-              :time => geometry[:properties][:date],
-              :style =>"#r_style_#{random}"
+              :geometry => this_uid[:geometries].changeset_bboxes[index][:bbox],
+              :time => this_uid[:geometries].changeset_bboxes[index][:time],
+              :style =>"#r_style_#{random}",
+              :desc => %Q{Area:    #{this_uid[:geometries].changeset_bboxes[index][:area]}
+                          Density: #{this_uid[:geometries].changeset_bboxes[index][:density]}
+                          User:    #{this_uid[:name]}}
             }
           end
+          if options.what == 'n' or options.what == 'b'
+            v.each do |geometry|
+              changeset_folder[:features] << {
+                :name => k,
+                :geometry => geometry[:geometry],
+                :time => geometry[:properties][:date],
+                :style =>"#r_style_#{random}"
+              }
+            end
+          end
+
+          #Add the changeset folder to the user's folders
+          this_user[:folders] << changeset_folder
+          index += 1 #Move onto the next changeset
         end
+        #Write the user folder
+        file.write_folder(this_user)
+      # rescue
+      #    p $!
+      #    puts caller
+      #    puts "Error occured, moving onto next user"
+      #end
+    end #End user iterator
 
-        #Add the changeset folder to the user's folders
-        this_user[:folders] << changeset_folder
-        index += 1 #Move onto the next changeset
-      end
-      #Write the user folder
-      file.write_folder(this_user)
-    rescue
-       p $!
-       puts caller
-       puts "Error occured, moving onto next user"
-    end
-  end #End user iterator
-
-  puts "Writing footer of KML file"
-  file.write_footer
+    puts "Writing footer of KML file"
+    file.write_footer
+  end #End the csv
 
 end
