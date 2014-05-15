@@ -2,10 +2,27 @@ Changeset Analysis
 ========================================================
 Looking at OSM changeset density
 
+Part 0: Define custom functions
+```{r custom_functions, echo=TRUE, results=FALSE}
+#Allow for normalization of date
+adjustDate <- function(dataframe, date){
+  dataframe$DaysSinceEvent = as.numeric(as.Date(dataframe$date) - as.Date(date))
+  return(dataframe)
+}
+
+#This function returns 0 if x is less than zero instead of calculating the log
+custom_log <- function(x) ifelse(x <= 0, 0, base::log(x)) #Redefine log to return 0 when undefined...
+```
+
+Part 0.1: Load Libraries
+```{r load_libraries, echo=FALSE, results='show'}
+library(ggplot2)
+library(ineq)
+```
 
 Part 1: Load the Data
 -------------------------------------------------------
-```{r import_changeset_analysis, echo=FALSE, results='hide', message=FALSE}
+```{r import_from_mongo, echo=FALSE, results='show', message=FALSE}
 #Load Data from Mongo?  No.
 #source("/Users/jenningsanderson/Dropbox/OSM/osm-history/rcode/changesets_analysis.r")
 
@@ -25,9 +42,7 @@ Part 1: Load the Data
 ```
 
 1. Load the entire Data from the disaster window CSV
-```{r initial_load, echo=FALSE, results='show', message=FALSE, warning=FALSE}
-#Load libraries
-library(ggplot2)
+```{r load_entire_window, echo=FALSE, results='show', message=FALSE, warning=FALSE}
 
 #Load the data from csv
 philippines = read.csv("/Users/jenningsanderson/Google Drive/OSM-Haiti-Philippines-SocialComputing/data/users_changesets/phil_changesets_data.csv")
@@ -44,10 +59,8 @@ philippines = adjustDate(philippines, ISOdate(2013,11,08))
 dat = rbind(philippines, haiti)
 ```
 
-
-
 2. Load some small sample data, this is data from 25 random users in each data set.
-```{r echo=FALSE}
+```{r load_sample_data, echo=FALSE, results='show'}
 phil_sample_data = read.csv("/Users/jenningsanderson/Google Drive/OSM-Haiti-Philippines-SocialComputing/data/users_changesets/phil_sample_data.csv")
 haiti_sample_data = read.csv("/Users/jenningsanderson/Google Drive/OSM-Haiti-Philippines-SocialComputing/data/users_changesets/haiti_sample_data.csv")
 
@@ -57,10 +70,8 @@ phil_sample_data$Country = "Philippines"
 sample_dat = rbind(haiti_sample_data, phil_sample_data)
 ```
 
-
-
 3. For more data, load a larger sample: 75 users from each set.
-```{r echo=FALSE}
+```{r load_sample_75, results='show', echo=FALSE}
 phil_75_sample_data = read.csv("/Users/jenningsanderson/Google Drive/OSM-Haiti-Philippines-SocialComputing/data/users_changesets/phil_75_sample_data.csv")
 haiti_75_sample_data = read.csv("/Users/jenningsanderson/Google Drive/OSM-Haiti-Philippines-SocialComputing/data/users_changesets/haiti_75_sample_data.csv")
 
@@ -75,63 +86,124 @@ sample_dat75 = rbind(haiti_75_sample_data, phil_75_sample_data)
 ```
 
 4. Load only changesets with less than 1000 nodes (still has the 1 node)
+```{r load_1000node_sample, echo=FALSE, results='show'}
+phil_lim300 = read.csv("/Users/jenningsanderson/Google Drive/OSM-Haiti-Philippines-SocialComputing/data/users_changesets/limited/phil_300_sample_data.csv")
+haiti_lim300 = read.csv("/Users/jenningsanderson/Google Drive/OSM-Haiti-Philippines-SocialComputing/data/users_changesets/limited/haiti_300_sample_data.csv")
 
-```{r echo=FALSE}
+haiti_lim300$Country = "Haiti"
+phil_lim300$Country = "Philippines"
 
-adjustDate <- function(dataframe, date){
-  dataframe$DaysSinceEvent = as.numeric(as.Date(dataframe$date) - as.Date(date))
-  return(dataframe)
-}
+haiti_lim300 = adjustDate(haiti_lim300, ISOdate(2010,1,12))
+phil_lim300 = adjustDate(phil_lim300, ISOdate(2013,11,08))
+
+sample_dat_lim = rbind(haiti_lim300, phil_lim300)
+
+```
+
+5. Load only changesets with less than 1000 nodes (and more than 1 node) -- entire set
+```{r pruned_set, echo=FALSE, results='show'}
+phil_lim = read.csv("/Users/jenningsanderson/Google Drive/OSM-Haiti-Philippines-SocialComputing/data/users_changesets/limited/phil_changesets_lim_data.csv")
+haiti_lim = read.csv("/Users/jenningsanderson/Google Drive/OSM-Haiti-Philippines-SocialComputing/data/users_changesets/limited/haiti_changesets_lim_data.csv")
+
+haiti_lim$Country = "Haiti"
+phil_lim$Country = "Philippines"
+
+haiti_lim = adjustDate(haiti_lim, ISOdate(2010,1,12))
+phil_lim = adjustDate(phil_lim, ISOdate(2013,11,08))
+
+dat_lim = rbind(haiti_lim, phil_lim)
+
+
 ```
 
 ### Summary Statistics of the data
+_Currently not implemented_
+
 Philippines
-```{r results='hide'}
+```{r, echo=FALSE, results='hide'}
 summary(philippines$node_count)
 summary(philippines$area)
 summary(philippines$density)
 ```
 
 Haiti
-```{r results = 'hide'}
+```{r, echo=FALSE, results='hide'}
 summary(haiti$node_count)
 summary(haiti$area)
 summary(haiti$density)
 ```
 
-```{r}
-log <- function(x) ifelse(x <= 0, 0, base::log(x)) #Redefine log to return 0 when undefined...
+
+### Comparing Node Counts
+Notice that there is a large spike in the Philippines at 4 nodes per changeset.  A simple building is typically comprised of exaclty 4 nodes.  The working hypothesis here is that each of these changesets represents a building and that buildings were mapped in the Philippines because the road structure was already in place; whereas in Haiti, the road system was not yet in place.
+
+```{r comparing_node_counts, echo=FALSE, fig.width=12, fig.height=5}
+par(mfcol=c(1,2)) 
+hist(log(haiti$node_count, base=10), breaks=50, main="Nodes per changeset in Haiti")
+hist(log(philippines$node_count, base=10), breaks=50, main="Nodes per changeset in Philippines")
 ```
 
 
+### Lorenz curves for the amount of nodes
+```{r lorenz_curves, echo=FALSE, fig.width=15}
+library(ineq)
+plot.new()
+Lc.1 <- Lc(aggregate(haiti_lim$node_count, list(haiti_lim$user), sum)$x);
+Lc.2 <- Lc(aggregate(phil_lim$node_count, list(phil_lim$user), sum)$x);
+Lc.3 <- Lc(haiti_lim$user)
+Lc.4 <- Lc(phil_lim$user)
+plot(Lc.1, col=2, xlab="Percentage of Users", ylab="Percentage of Nodes or Changesets", main="Lorenz Curve for Changeset and Node count Ownership")
+lines(Lc.2, col=4)
+lines(Lc.3, lty='dotted', col=2)
+lines(Lc.4, lty='dotted', col=4)
+
+# Legends ---------------------------------------------
+lines(c(.05,.15),c(.9,.9), col=2)
+lines(c(.05,.15),c(.85,.85), col=4)
+lines(c(.05,.15),c(.8,.8), col=2, lty='dotted')
+lines(c(.05,.15),c(.75,.75), col=4, lty='dotted')
+text(.15,.9,"Haiti Nodes by User", pos=4)
+text(.15,.85,"Philippines Nodes by User", pos=4)
+text(.15,.8,"Haiti Changesets by User", pos=4)
+text(.15,.75,"Philippines Changesets by User", pos=4)
+```
+
+
+### Count users that edited in both sets:
+```{r}
+length(intersect(philippines$user, haiti$user))
+```
+
+### Plot Node count vs area
+```{r fig.width=12, message=FALSE, warning=FALSE}
+ggplot(data=dat_lim, aes(x = log(node_count), y = custom_log(density), color=Country) ) + 
+  geom_point(shape=19, alpha=1/2) +
+  stat_smooth(method = "lm", size = 1)
+```
+
 ### Plot Node count vs area
 ```{r fig.width=12, another_test, message=FALSE, warning=FALSE}
-ggplot(data=dat[dat$area != 1,], aes(x = log(area), y = log(density), color=Country) ) + 
+ggplot(data=dat_lim, aes(x = log(area), y = custom_log(density), color=Country) ) + 
   geom_point(shape=19, alpha=1/2) +
   stat_smooth(method = "lm", size = 1)
 ```
 
 ### Histogram of densities
 ```{r}
-ggplot(dat[dat$density != 1,], aes(log(density), fill = Country)) + geom_histogram(alpha = 0.5, binwidth=.1, position = 'identity')
-```
-
-
-```{r echo=FALSE} 
-#[sample(nrow(dat),10000),]
+ggplot(dat_lim, aes(log(density), fill = Country)) + geom_histogram(alpha = 0.5, binwidth=.1, position = 'identity')
 ```
 
 ### What about just density overtime?
 ```{r fig.width=12, count_v_area, message=FALSE, warning=FALSE}
-ggplot(data=dat[dat$density != 1, ], aes(x = DaysSinceEvent, y = log(density), color=Country) ) + 
-  geom_point(shape=19, alpha=1/2) +
-  stat_smooth(method = "loess", size = 1)
+#ggplot(data=dat_lim, aes(x = DaysSinceEvent, y = log(density), color=Country) ) + 
+#  geom_point(shape=19, alpha=1/2) +
+#  stat_smooth(method = "loess", size = 1)
 ```
 
 
 ### Plotting Node Density against user joining date
 ```{r fig.width=12, density, message=FALSE, warning=FALSE}
 #Plot them against eachother:
-ggplot(aes(x = userjoin, y = log(node_density), color=Country), data=dat) +  geom_point(shape=19,alpha=1/2)
+#ggplot(aes(x = userjoin, y = log(node_density), color=Country), data=dat) +  geom_point(shape=19,alpha=1/2)
 ```
 

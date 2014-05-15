@@ -262,7 +262,7 @@ class OSMGeoJSONMongo
 			@notes.insert(note)
 			i += 1
 		end
-		puts "\n[OK]: This batch done."	
+		puts "\n[OK]: This batch done."
 	end
 end #class
 

@@ -1,14 +1,14 @@
 '''
-This script takes user samples from the OSM changeset.
-
+May 2014
+This script hits the EPIC Mongo OSM database.
 '''
 require 'mongo'
 require 'optparse'
+require 'ostruct'
 require 'rgeo'
 require 'rgeo/geo_json'
 require 'csv'
-
-require_relative 'kml_writer_helper' #Eventually, this will be wrapped into the epic-geo gem
+require 'epic-geo' #Custom gem for epic
 
 
 class GetNodeGeometries
@@ -31,7 +31,8 @@ class GetNodeGeometries
   def hit_nodes_collection
     @sets.each do |set|
       query = DB['nodes'].find(selector = {'properties.changeset'=>set}, opts = {:fields => ['geometry', 'date', 'properties.user']})
-      if query.count > 1 and query.count < 10000 #Only get those that we can really use
+      count = query.count
+      if (count > 1) and (count < 10000) #Only get those that we can really use
         @name = query.each.first['properties']['user']
         query.rewind! #Put it back to beginning...
 
@@ -124,10 +125,15 @@ if __FILE__ == $0
   puts "Opening KML file for writing"
   file = KMLAuthor.new(options.filename)
   file.write_header(options.title)
-  file.generate_random_styles(options.limit)
+  #file.generate_random_styles(options.limit)
+  file.write_color_ramp_style(20)
 
   #Start the CSV Output
   puts "Opening the CSV for writing"
+
+  #TODO : MAKE THIS WORK
+  max_density = 100
+
   CSV.open(options.filename+'_data.csv','w') do |csv|
     csv << ['user', 'node_count', 'area', 'density', 'date']
 
@@ -167,12 +173,22 @@ if __FILE__ == $0
           changeset_folder = {:name => k, :features=>[]}
 
           #Each changeset folder gets a geometry feature for the node
+
+          #How dense is it?
+          density = this_uid[:geometries].changeset_bboxes[index][:density]
+          if density > max_density
+            max_density = density
+          end
+
+          style = ( (density/max_density) * 20).round #Linear scale
+
           if options.what == 'p' or options.what == 'b'
             changeset_folder[:features] <<{
               :name => k,
               :geometry => this_uid[:geometries].changeset_bboxes[index][:bbox],
               :time => this_uid[:geometries].changeset_bboxes[index][:time],
-              :style =>"#r_style_#{random}",
+              #:style =>"#r_style_#{random}",
+              :style =>"#c_ramp_style_#{style}",
               :desc => %Q{Area:    #{this_uid[:geometries].changeset_bboxes[index][:area]}
                           Density: #{this_uid[:geometries].changeset_bboxes[index][:density]}
                           User:    #{this_uid[:name]}}

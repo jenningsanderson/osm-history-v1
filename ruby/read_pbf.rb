@@ -12,7 +12,6 @@ gem install pbf_parser
 
 require './OSMGeoJSONMongo.rb'
 
-
 if __FILE__==$0
 	if ARGV[0].nil?
 		puts "Call this in the following manner: "
