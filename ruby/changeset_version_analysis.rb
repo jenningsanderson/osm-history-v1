@@ -1,10 +1,9 @@
+'''
+This script plots
+'''
+
 require 'mongo'
 require 'rsruby'
-require 'optparse'
-require 'ostruct'
-require 'rgeo'
-require 'rgeo/geo_json'
-require 'csv'
 require 'epic-geo' #Custom gem for epic
 
 require_relative 'user_changesets_sampled'
@@ -51,5 +50,6 @@ r.assign('vers',versions)
 
 r.png("node_versions_#{event}.png",:height=>600,:width=>800)
 r.eval_R %{ hist(vers), main="Histogram of node versions", xlab="Version", ylab="Count", breaks=100) }
+#r.eval_R "axis.Date(1, as.Date(dates, origin=\"1960-10-01\"), format='%m/%d/%Y')"
 r.eval_R %{ dev.off() }
 

@@ -11,7 +11,7 @@ adjustDate <- function(dataframe, date){
 }
 
 #This function returns 0 if x is less than zero instead of calculating the log
-custom_log <- function(x) ifelse(x <= 0, 0, base::log(x)) #Redefine log to return 0 when undefined...
+custom_log <- function(x) ifelse(x <= 0, 0, base::log(x, base=10)) #Redefine log to return 0 when undefined...
 ```
 
 Part 0.1: Load Libraries
@@ -176,16 +176,16 @@ length(intersect(philippines$user, haiti$user))
 
 ### Plot Node count vs area
 ```{r fig.width=12, message=FALSE, warning=FALSE}
-ggplot(data=dat_lim, aes(x = log(node_count), y = custom_log(density), color=Country) ) + 
+ggplot(data=dat_lim, aes(x = log(node_count), y = custom_log(density)) ) + 
   geom_point(shape=19, alpha=1/2) +
   stat_smooth(method = "lm", size = 1)
 ```
 
 ### Plot Node count vs area
 ```{r fig.width=12, another_test, message=FALSE, warning=FALSE}
-ggplot(data=dat_lim, aes(x = log(area), y = custom_log(density), color=Country) ) + 
-  geom_point(shape=19, alpha=1/2) +
-  stat_smooth(method = "lm", size = 1)
+ggplot(data=dat_lim, aes(x=area, y=log(density), base=10)) + 
+  geom_point(aes(color=Country),shape=19, alpha=1/2) + 
+  stat_smooth(aes(group=Country), method="glm")
 ```
 
 ### Histogram of densities
@@ -207,3 +207,17 @@ ggplot(dat_lim, aes(log(density), fill = Country)) + geom_histogram(alpha = 0.5,
 #ggplot(aes(x = userjoin, y = log(node_density), color=Country), data=dat) +  geom_point(shape=19,alpha=1/2)
 ```
 
+### Plotting changesets against each other
+```{r fig.width=12, density_histogram_comparison}
+#define a new function for getting the frequency
+frequency <-function(vector){
+  return(vector/ (sum(vector)*100) )
+}
+
+multhist(list(log(haiti_lim$density, base=10), log(phil_lim$density, base=10)), probability=TRUE, xlab="Density: Nodes/Sq. km (log base 10)", ylab="Normalized Frequency", main="Histogram of Philippines vs. Haiti Changeset Densities", legend=TRUE,breaks=seq(-2,9,by=.25))
+
+multhist(list(log(haiti_lim$area, base=10), log(phil_lim$area, base=10)), probability=TRUE, xlab="Area: Sq. km (log base 10)", ylab="Normalized Frequency", main="Histogram of Philippines vs. Haiti Changeset Areas", breaks=seq(-2.5,6,by=.25))
+
+h = hist(log(haiti_lim$density))
+h$density = h$counts / sum(h$counts)*100
+```

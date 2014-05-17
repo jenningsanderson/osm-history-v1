@@ -18,7 +18,7 @@ COLL = DB['changesets']
 
 #Make a new hash for getting data from DB, use r functions to format it properly
 date_hist = {}
-COLL.find({},{}).each do |changeset|
+COLL.find({},{:limit=>100}).each do |changeset|
 	#puts changeset.inspect
 	time = r.as_Date(changeset['created_at'].iso8601)
 	date_hist[time] ||= []
@@ -43,6 +43,8 @@ puts "Done with prepping"
 
 #Set the r variable for dates for the x axis.
 r.assign('dates',r.as_Date(x_vals, :origin=>"1970-01-01", :format=>'%m/%d/%Y'))
+
+print r.dates
 
 r.png("avg_changeset_size_per_day_phil.png",:height=>600,:width=>800)
 r.plot({:x=>x_vals,:y=>y_vals, :ylab=>'Average Nodes per changeset',:xaxt=>'n',:xlab=>"Day"})

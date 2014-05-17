@@ -1,12 +1,13 @@
 '''
 May 2014
-This script hits the EPIC Mongo OSM database.
+This script hits the EPIC Mongo OSM database and visualizes changesets by node.
 '''
 require 'mongo'
 require 'optparse'
 require 'ostruct'
 require 'rgeo'
 require 'rgeo/geo_json'
+require 'geo_ruby/geojson'
 require 'csv'
 require 'epic-geo' #Custom gem for epic
 
@@ -17,11 +18,16 @@ class GetNodeGeometries
 
   attr_reader :set_geometries, :name, :changeset_bboxes
 
-  def initialize(user)
+  def initialize(user, database=FALSE)
     @uid = user[:id]
     @sets = user[:changesets]
     @set_geometries = {}
     @changeset_bboxes = []
+    if database
+      @database = database
+    else
+      @database = DB
+    end
   end
 
   def convert_to_rgeo(georuby_polygon)
@@ -30,9 +36,9 @@ class GetNodeGeometries
 
   def hit_nodes_collection
     @sets.each do |set|
-      query = DB['nodes'].find(selector = {'properties.changeset'=>set}, opts = {:fields => ['geometry', 'date', 'properties.user']})
+      query = @database['nodes'].find(selector = {'properties.changeset'=>set}, opts = {:fields => ['geometry', 'date', 'properties.user']})
       count = query.count
-      if (count > 1) and (count < 10000) #Only get those that we can really use
+      if (count < 10000) #Only get those that we can really use
         @name = query.each.first['properties']['user']
         query.rewind! #Put it back to beginning...
 
@@ -41,11 +47,11 @@ class GetNodeGeometries
         query.each do |node_geometry|
           @set_geometries[set] << {
             :geometry=>GeoRuby::SimpleFeatures::Geometry.from_geojson(node_geometry['geometry'].to_json),
-            :properties=>{:date=>node_geometry['date']}}
+            :properties=>{:date=>node_geometry['date'], :user=>node_geometry['properties']['user']}}
         end
         this_bbox = GeoRuby::SimpleFeatures::GeometryCollection.from_geometries(@set_geometries[set].collect{|obj| obj[:geometry]})
         envelope = this_bbox.envelope
-        time = COLL.find({'id'=>set},{:fields=>['created_at']}).first
+        time = @database['changesets'].find({'id'=>set},{:fields=>['created_at']}).first
         bbox =GeoRuby::SimpleFeatures::Polygon.from_coordinates(
           [[[envelope.lower_corner.x, envelope.lower_corner.y],
             [envelope.lower_corner.x, envelope.upper_corner.y],
@@ -53,6 +59,9 @@ class GetNodeGeometries
             [envelope.upper_corner.x, envelope.lower_corner.y],
             [envelope.lower_corner.x, envelope.lower_corner.y]]] )
         area = convert_to_rgeo(bbox).area/1000000
+        if area.zero?
+          bbox = GeoRuby::SimpleFeatures::Point.from_coordinates([envelope.lower_corner.x, envelope.lower_corner.y])
+        end
         count = @set_geometries[set].size
         density = count / area
         if density == Float::INFINITY

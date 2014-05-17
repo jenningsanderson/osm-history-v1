@@ -81,3 +81,38 @@ The intersection is:
 ]
 */
 
+var arrayUnique = function(a) {
+    return a.reduce(function(p, c) {
+        if (p.indexOf(c) < 0) p.push(c);
+        return p;
+    }, []);
+};
+
+
+//Set Variables
+var haiti_start = new Date(2010,0,12);
+var haiti_end   = new Date(2010,1,12);
+var phil_start  = new Date(2013,10,8);
+var phil_end    = new Date(2013,11,8);
+use philippines;
+
+var potential_buildings = db.changesets.distinct('id',{created_at : {$gt : phil_start, $lt : phil_end},node_count : 4})
+
+building_count = 0;
+potential_buildings.forEach(function(changeset){
+	doc = db.ways.findOne({'properties.changeset' : changeset})
+	if (doc!=undefined){
+		if (doc.properties.tags!=undefined){
+			if (doc.properties.tags.building != undefined){
+				building_count++
+			}
+		}
+	}
+})
+
+
+
+
+
+
+
