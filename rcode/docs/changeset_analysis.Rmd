@@ -18,6 +18,7 @@ Part 0.1: Load Libraries
 ```{r load_libraries, echo=FALSE, results='show'}
 library(ggplot2)
 library(ineq)
+library(plotrix)
 ```
 
 Part 1: Load the Data
@@ -56,7 +57,7 @@ haiti$Country        = "Haiti"
 haiti = adjustDate(haiti, ISOdate(2010,1,12))
 philippines = adjustDate(philippines, ISOdate(2013,11,08))
 
-dat = rbind(philippines, haiti)
+dat = rbind(philippines, haiti)dat
 ```
 
 2. Load some small sample data, this is data from 25 random users in each data set.
@@ -207,13 +208,37 @@ ggplot(dat_lim, aes(log(density), fill = Country)) + geom_histogram(alpha = 0.5,
 #ggplot(aes(x = userjoin, y = log(node_density), color=Country), data=dat) +  geom_point(shape=19,alpha=1/2)
 ```
 
+### Getting an idea for when the edits occur
+```{r when_edits_occured}
+haiti_node_count = c(by(haiti$node_count, haiti$DaysSinceEvent, sum))
+phil_node_count = c(by(philippines$node_count, philippines$DaysSinceEvent, sum))
+
+height <- rbind(haiti_node_count, phil_node_count)
+
+barplot(height, beside = TRUE, main="Nodes Edited Each Day since Event", xlab="Days Since Event", ylab="Total number of nodes edited")
+
+```
+
+### Getting an idea for when the edits occur
+```{r when_edits_occured}
+haiti_users_by_day = c(by(haiti$user, haiti$DaysSinceEvent, unique))
+phil_users_by_day = c(by(philippines$user, philippines$DaysSinceEvent, unique))
+
+
+n <- max(length(haiti_users_by_day), length(phil_users_by_day))
+length(haiti_users_by_day) <- n                    
+length(phil_users_by_day) <- n
+
+height <- rbind(haiti_users_by_day, phil_users_by_day)
+
+barplot(height, beside = TRUE, main="Users editing each day since event", xlab="Days Since Event", ylab="Total number of users editing")
+
+```
+
+
 ### Plotting changesets against each other
 ```{r fig.width=12, density_histogram_comparison}
 #define a new function for getting the frequency
-frequency <-function(vector){
-  return(vector/ (sum(vector)*100) )
-}
-
 multhist(list(log(haiti_lim$density, base=10), log(phil_lim$density, base=10)), probability=TRUE, xlab="Density: Nodes/Sq. km (log base 10)", ylab="Normalized Frequency", main="Histogram of Philippines vs. Haiti Changeset Densities", legend=TRUE,breaks=seq(-2,9,by=.25))
 
 multhist(list(log(haiti_lim$area, base=10), log(phil_lim$area, base=10)), probability=TRUE, xlab="Area: Sq. km (log base 10)", ylab="Normalized Frequency", main="Histogram of Philippines vs. Haiti Changeset Areas", breaks=seq(-2.5,6,by=.25))
