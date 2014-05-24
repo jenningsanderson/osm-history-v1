@@ -199,4 +199,9 @@ if $0 == __FILE__
   unrecognized_user_edit_in_bound.uniq!
   unrecognized_user_edit_out_bound.uniq!
 
+  #Now find users that mapped in Haiti and the Philippines that also show up in the Task manager list
+  intersect_users = [  "jgc",  "bielebog",  "Grausewitz",  "kjon","chippy","eknus","MAPconcierge","PierZen","Steven Citron-Pousty","andygates","maning","ajeba","katpatuka","Lübeck","jaakkoh","Harry Wood","rjhale1971","higa4","marcschneider","ikiya","fil","florisje","alv","malenki","robert","EdLoach","Dave Smith","mapistanbul","Jesús Gómez","clara","wonderchook","niubii","simone","StellanL","MickO","ecaldwell","theonlytruth","Martin_Jensen","Andy Stricker","Samusz","brunosan","geografa","CaptainCrunch","vsandre","keinseier","mabapla","sev_hotosm","sejohnson","SK53","25or6to4","Paul The Archivist","AlNo","springmeyer","bahnpirat"]
+
+  puts "The Intersect of intersect users and distinct tm users is: #{(tm_distinct_users & intersect_users).count} users."
+
 end

@@ -21,4 +21,3 @@ intersection = names & tm_users
 puts "The intersection between the two has: #{intersection.length} users"
 
 puts "They are: #{intersection}"
-

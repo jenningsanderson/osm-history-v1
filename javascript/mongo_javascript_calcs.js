@@ -14,10 +14,10 @@ var phil_start  = new Date(2013,10,8);
 var phil_end    = new Date(2013,11,8);
 
 use haiti
-haiti_users = db.nodes.distinct('properties.uid',{date : {$gt : haiti_start, $lt : haiti_end}});
+haiti_users = db.nodes.distinct('properties.user',{date : {$gt : haiti_start, $lt : haiti_end}});
 
 use philippines
-phil_users  = db.nodes.distinct('properties.uid',{date : {$gt : phil_start, $lt : phil_end}});
+phil_users  = db.nodes.distinct('properties.user',{date : {$gt : phil_start, $lt : phil_end}});
 
 intersect = phil_users.filter(function(n){return haiti_users.indexOf(n)!=-1});
 
