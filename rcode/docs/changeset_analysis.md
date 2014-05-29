@@ -1,20 +1,8 @@
 Changeset Analysis
 ========================================================
-Looking at OSM changeset density
 
 Part 0: Define custom functions
 
-```r
-# Allow for normalization of date
-adjustDate <- function(dataframe, date) {
-    dataframe$DaysSinceEvent = as.numeric(as.Date(dataframe$date) - as.Date(date))
-    return(dataframe)
-}
-
-# This function returns 0 if x is less than zero instead of calculating the
-# log
-custom_log <- function(x) ifelse(x <= 0, 0, base::log(x))  #Redefine log to return 0 when undefined...
-```
 
 
 Part 0.1: Load Libraries
@@ -57,7 +45,8 @@ Haiti
 
 
 
-
+Part 2. Visual Comparison
+-------------------------------------
 ### Comparing Node Counts
 Notice that there is a large spike in the Philippines at 4 nodes per changeset.  A simple building is typically comprised of exaclty 4 nodes.  The working hypothesis here is that each of these changesets represents a building and that buildings were mapped in the Philippines because the road structure was already in place; whereas in Haiti, the road system was not yet in place.
 
@@ -72,63 +61,45 @@ Notice that there is a large spike in the Philippines at 4 nodes per changeset. 
 
 ### Count users that edited in both sets:
 
-```r
-length(intersect(philippines$user, haiti$user))
-```
-
 ```
 ## [1] 54
 ```
 
 
-### Plot Node count vs area
+### Getting an idea for WHEN the edits occur
+
+```
+## pdf 
+##   2
+```
+
+
+### Looking at Changeset Density & Area
+The following results are normalized to 1, so that they can be compared side-by-side.  The breaks are .25, so the sum of the area is 4.
+![plot of chunk changeset_densities_areas](figure/changeset_densities_areas1.png) ![plot of chunk changeset_densities_areas](figure/changeset_densities_areas2.png) ![plot of chunk changeset_densities_areas](figure/changeset_densities_areas3.png) 
+
+
+### Plot User contributions by day since the event
 
 ```r
-ggplot(data = dat_lim, aes(x = log(node_count), y = custom_log(density), color = Country)) + 
-    geom_point(shape = 19, alpha = 1/2) + stat_smooth(method = "lm", size = 1)
+# Load the CSV that's printed from ruby
+haiti_by_day_contributions = read.csv("/Users/jenningsanderson/osm-history/ruby/csv_exports/haiti_top_20_user_node_count_by_day.csv")
+ggplot(haiti_by_day_contributions, aes(x = DaysSinceEvent, y = NodeCount, color = User)) + 
+    geom_line() + scale_fill_brewer(palette = "Paired") + xlab("Days Since Event") + 
+    ylab("Nodes Edited Each Day") + ggtitle("Haiti User Activity per day since Event")
 ```
 
-![plot of chunk unnamed-chunk-4](figure/unnamed-chunk-4.png) 
+![plot of chunk haiti_nodes_by_user](figure/haiti_nodes_by_user.png) 
 
 
-### Plot Node count vs area
 
 ```r
-ggplot(data = dat_lim, aes(x = log(area), y = custom_log(density), color = Country)) + 
-    geom_point(shape = 19, alpha = 1/2) + stat_smooth(method = "lm", size = 1)
+# Load the CSV that's printed from ruby
+phil_by_day_contributions = read.csv("/Users/jenningsanderson/osm-history/ruby/csv_exports/phil_top_20_user_node_count_by_day.csv")
+ggplot(phil_by_day_contributions, aes(x = DaysSinceEvent, y = NodeCount, color = User)) + 
+    geom_line() + scale_fill_brewer(palette = "Blues") + xlab("Days Since Event") + 
+    ylab("Nodes Edited Each Day") + ggtitle("Philippines User Activity per day since Event")
 ```
 
-```
-## Error: argument is of length zero
-```
-
-
-### Histogram of densities
-
-```r
-ggplot(dat_lim, aes(log(density), fill = Country)) + geom_histogram(alpha = 0.5, 
-    binwidth = 0.1, position = "identity")
-```
-
-![plot of chunk unnamed-chunk-5](figure/unnamed-chunk-5.png) 
-
-
-### What about just density overtime?
-
-```r
-# ggplot(data=dat_lim, aes(x = DaysSinceEvent, y = log(density),
-# color=Country) ) + geom_point(shape=19, alpha=1/2) + stat_smooth(method =
-# 'loess', size = 1)
-```
-
-
-
-### Plotting Node Density against user joining date
-
-```r
-# Plot them against eachother: ggplot(aes(x = userjoin, y =
-# log(node_density), color=Country), data=dat) +
-# geom_point(shape=19,alpha=1/2)
-```
-
+![plot of chunk phil_nodes_by_user](figure/phil_nodes_by_user.png) 
 

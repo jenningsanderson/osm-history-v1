@@ -1,9 +1,8 @@
 Changeset Analysis
 ========================================================
-Looking at OSM changeset density
 
 Part 0: Define custom functions
-```{r custom_functions, echo=TRUE, results=FALSE}
+```{r custom_functions, echo=FALSE, results=FALSE}
 #Allow for normalization of date
 adjustDate <- function(dataframe, date){
   dataframe$DaysSinceEvent = as.numeric(as.Date(dataframe$date) - as.Date(date))
@@ -57,7 +56,7 @@ haiti$Country        = "Haiti"
 haiti = adjustDate(haiti, ISOdate(2010,1,12))
 philippines = adjustDate(philippines, ISOdate(2013,11,08))
 
-dat = rbind(philippines, haiti)dat
+dat = rbind(philippines, haiti)
 ```
 
 2. Load some small sample data, this is data from 25 random users in each data set.
@@ -121,27 +120,30 @@ dat_lim = rbind(haiti_lim, phil_lim)
 _Currently not implemented_
 
 Philippines
-```{r, echo=FALSE, results='hide'}
+```{r summary_stats_phil, echo=FALSE, results='hide'}
 summary(philippines$node_count)
 summary(philippines$area)
 summary(philippines$density)
 ```
 
 Haiti
-```{r, echo=FALSE, results='hide'}
+```{r summary_stats_haiti, echo=FALSE, results='hide'}
 summary(haiti$node_count)
 summary(haiti$area)
 summary(haiti$density)
 ```
 
-
+Part 2. Visual Comparison
+-------------------------------------
 ### Comparing Node Counts
 Notice that there is a large spike in the Philippines at 4 nodes per changeset.  A simple building is typically comprised of exaclty 4 nodes.  The working hypothesis here is that each of these changesets represents a building and that buildings were mapped in the Philippines because the road structure was already in place; whereas in Haiti, the road system was not yet in place.
 
 ```{r comparing_node_counts, echo=FALSE, fig.width=12, fig.height=5}
+png("/Users/jenningsanderson/Dropbox/OSM_Behavioral_Analysis_CSCW/Images/ComparingNodeCounts.png",width=800, height=400)
 par(mfcol=c(1,2)) 
-hist(log(haiti$node_count, base=10), breaks=50, main="Nodes per changeset in Haiti")
-hist(log(philippines$node_count, base=10), breaks=50, main="Nodes per changeset in Philippines")
+hist(log(haiti$node_count, base=10), breaks=50, main="Nodes per changeset in Haiti", xlab="Nodes Per changeset (log base 10)")
+hist(log(philippines$node_count, base=10), breaks=50, main="Nodes per changeset in Philippines",xlab="Nodes Per changeset (log base 10)")
+dev.off()
 ```
 
 
@@ -171,78 +173,71 @@ text(.15,.75,"Philippines Changesets by User", pos=4)
 
 
 ### Count users that edited in both sets:
-```{r}
+```{r counting_intersect, echo=FALSE}
 length(intersect(philippines$user, haiti$user))
 ```
 
-### Plot Node count vs area
-```{r fig.width=12, message=FALSE, warning=FALSE}
-ggplot(data=dat_lim, aes(x = log(node_count), y = custom_log(density)) ) + 
-  geom_point(shape=19, alpha=1/2) +
-  stat_smooth(method = "lm", size = 1)
-```
-
-### Plot Node count vs area
-```{r fig.width=12, another_test, message=FALSE, warning=FALSE}
-ggplot(data=dat_lim, aes(x=area, y=log(density), base=10)) + 
-  geom_point(aes(color=Country),shape=19, alpha=1/2) + 
-  stat_smooth(aes(group=Country), method="glm")
-```
-
-### Histogram of densities
-```{r}
-ggplot(dat_lim, aes(log(density), fill = Country)) + geom_histogram(alpha = 0.5, binwidth=.1, position = 'identity')
-```
-
-### What about just density overtime?
-```{r fig.width=12, count_v_area, message=FALSE, warning=FALSE}
-#ggplot(data=dat_lim, aes(x = DaysSinceEvent, y = log(density), color=Country) ) + 
-#  geom_point(shape=19, alpha=1/2) +
-#  stat_smooth(method = "loess", size = 1)
-```
-
-
-### Plotting Node Density against user joining date
-```{r fig.width=12, density, message=FALSE, warning=FALSE}
-#Plot them against eachother:
-#ggplot(aes(x = userjoin, y = log(node_density), color=Country), data=dat) +  geom_point(shape=19,alpha=1/2)
-```
-
-### Getting an idea for when the edits occur
-```{r when_edits_occured}
+### Getting an idea for WHEN the edits occur
+```{r when_edits_occured, echo=FALSE, fig.width=15}
 haiti_node_count = c(by(haiti$node_count, haiti$DaysSinceEvent, sum))
 phil_node_count = c(by(philippines$node_count, philippines$DaysSinceEvent, sum))
 
 height <- rbind(haiti_node_count, phil_node_count)
-
+png("/Users/jenningsanderson/Dropbox/OSM_Behavioral_Analysis_CSCW/Images/nodes_edited_per_day.png",width=800, height=400)
 barplot(height, beside = TRUE, main="Nodes Edited Each Day since Event", xlab="Days Since Event", ylab="Total number of nodes edited")
-
+legend(x=60,y=300000,   				                 # places a legend at the appropriate place 
+			 c("Philippines","Haiti"),         # puts text in the legend 
+       pch=c(15,15),                   		 		 # gives the legend appropriate symbols
+       col=c("grey","black"),
+			 cex=1.5) 	
+dev.off()
 ```
 
-### Getting an idea for when the edits occur
-```{r when_edits_occured}
-haiti_users_by_day = c(by(haiti$user, haiti$DaysSinceEvent, unique))
-phil_users_by_day = c(by(philippines$user, philippines$DaysSinceEvent, unique))
+### Looking at Changeset Density & Area
+The following results are normalized to 1, so that they can be compared side-by-side.  The breaks are .25, so the sum of the area is 4.
+```{r changeset_densities_areas, echo=FALSE, message=FALSE, fig.width=12}
+png("/Users/jenningsanderson/Dropbox/OSM_Behavioral_Analysis_CSCW/Images/ChangesetDensityComparison.png",width=800, height=400)
+multhist(list(log(haiti_lim$density, base=10), log(phil_lim$density, base=10)), probability=TRUE, xlab="Density: Nodes/Sq. km (log base 10)", ylab="Normalized Frequency", main="Histogram of Philippines vs. Haiti Changeset Densities",breaks=seq(-2,9,by=.25))
+legend(x=100,y=0.4,     			                 # places a legend at the appropriate place 
+			 c("Philippines","Haiti"),         # puts text in the legend 
+       pch=c(15,15),                   		 		 # gives the legend appropriate symbols
+       col=c("grey","black"),
+			 cex=1.5) 	
+dev.off()
 
-
-n <- max(length(haiti_users_by_day), length(phil_users_by_day))
-length(haiti_users_by_day) <- n                    
-length(phil_users_by_day) <- n
-
-height <- rbind(haiti_users_by_day, phil_users_by_day)
-
-barplot(height, beside = TRUE, main="Users editing each day since event", xlab="Days Since Event", ylab="Total number of users editing")
-
-```
-
-
-### Plotting changesets against each other
-```{r fig.width=12, density_histogram_comparison}
-#define a new function for getting the frequency
-multhist(list(log(haiti_lim$density, base=10), log(phil_lim$density, base=10)), probability=TRUE, xlab="Density: Nodes/Sq. km (log base 10)", ylab="Normalized Frequency", main="Histogram of Philippines vs. Haiti Changeset Densities", legend=TRUE,breaks=seq(-2,9,by=.25))
-
+png("/Users/jenningsanderson/Dropbox/OSM_Behavioral_Analysis_CSCW/Images/ChangesetAreaComparison.png",width=800, height=400)
 multhist(list(log(haiti_lim$area, base=10), log(phil_lim$area, base=10)), probability=TRUE, xlab="Area: Sq. km (log base 10)", ylab="Normalized Frequency", main="Histogram of Philippines vs. Haiti Changeset Areas", breaks=seq(-2.5,6,by=.25))
+legend(x=70,y=0.4,     			                 # places a legend at the appropriate place 
+			 c("Philippines","Haiti"),         # puts text in the legend 
+       pch=c(15,15),                   		 		 # gives the legend appropriate symbols
+       col=c("grey","black"),
+			 cex=1.5) 	
+dev.off()
+#h = hist(log(haiti_lim$density))
+#h$density = h$counts / sum(h$counts)*100
+```
 
-h = hist(log(haiti_lim$density))
-h$density = h$counts / sum(h$counts)*100
+### Plot User contributions by day since the event
+```{r haiti_nodes_by_user, fig.width=15}
+#Load the CSV that's printed from ruby
+haiti_by_day_contributions = read.csv("/Users/jenningsanderson/osm-history/ruby/csv_exports/haiti_top_20_user_node_count_by_day.csv")
+ggplot(haiti_by_day_contributions, aes(x=DaysSinceEvent, y=NodeCount, color=User)) + 
+  geom_line() + 
+  scale_fill_brewer(palette="Paired") +
+  xlab("Days Since Event") +
+  ylab("Nodes Edited Each Day") +
+  ggtitle("Haiti User Activity per day since Event")
+
+```
+
+```{r phil_nodes_by_user, fig.width=15}
+#Load the CSV that's printed from ruby
+phil_by_day_contributions = read.csv("/Users/jenningsanderson/osm-history/ruby/csv_exports/phil_top_20_user_node_count_by_day.csv")
+ggplot(phil_by_day_contributions, aes(x=DaysSinceEvent, y=NodeCount, color=User)) + 
+  geom_line() + 
+  scale_fill_brewer(palette="Blues") +
+  xlab("Days Since Event") +
+  ylab("Nodes Edited Each Day") +
+  ggtitle("Philippines User Activity per day since Event")
+
 ```
