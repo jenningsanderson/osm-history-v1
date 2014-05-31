@@ -50,7 +50,11 @@ Part 2. Visual Comparison
 ### Comparing Node Counts
 Notice that there is a large spike in the Philippines at 4 nodes per changeset.  A simple building is typically comprised of exaclty 4 nodes.  The working hypothesis here is that each of these changesets represents a building and that buildings were mapped in the Philippines because the road structure was already in place; whereas in Haiti, the road system was not yet in place.
 
-![plot of chunk comparing_node_counts](figure/comparing_node_counts.png) 
+
+```
+## pdf 
+##   2
+```
 
 
 
@@ -76,7 +80,16 @@ Notice that there is a large spike in the Philippines at 4 nodes per changeset. 
 
 ### Looking at Changeset Density & Area
 The following results are normalized to 1, so that they can be compared side-by-side.  The breaks are .25, so the sum of the area is 4.
-![plot of chunk changeset_densities_areas](figure/changeset_densities_areas1.png) ![plot of chunk changeset_densities_areas](figure/changeset_densities_areas2.png) ![plot of chunk changeset_densities_areas](figure/changeset_densities_areas3.png) 
+
+```
+## pdf 
+##   2
+```
+
+```
+## pdf 
+##   2
+```
 
 
 ### Plot User contributions by day since the event

@@ -7,7 +7,7 @@ require 'json'
 require 'rsruby'
 
 QUERY_TIME = {    :haiti=>{
-					:event=>Time.new(2010,1,12),
+					:event=>Time.new(2010,1,12,21,53,00),
                     :start=>Time.new(2010,01,12),
                     :end  =>Time.new(2010,02,12)},
 
@@ -15,8 +15,8 @@ QUERY_TIME = {    :haiti=>{
                   	:event=>Time.new(2013,11,8),
                     :start=>Time.new(2013,11,8),
                     :end  =>Time.new(2013,12,8)}
-                }
-TOTAL_HOURS = ( QUERY_TIME[:haiti][:end].yday - QUERY_TIME[:haiti][:start].yday ) * 24 + 24
+               }
+TOTAL_HOURS = ( QUERY_TIME[:haiti][:end].yday - QUERY_TIME[:haiti][:start].yday ) * 24 + 7
 
 
 
