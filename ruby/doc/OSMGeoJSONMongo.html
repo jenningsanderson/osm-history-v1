@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="UTF-8">
+
+<title>class OSMGeoJSONMongo - RDoc Documentation</title>
+
+<link href="./fonts.css" rel="stylesheet">
+<link href="./rdoc.css" rel="stylesheet">
+
+<script type="text/javascript">
+  var rdoc_rel_prefix = "./";
+</script>
+
+<script src="./js/jquery.js"></script>
+<script src="./js/navigation.js"></script>
+<script src="./js/search_index.js"></script>
+<script src="./js/search.js"></script>
+<script src="./js/searcher.js"></script>
+<script src="./js/darkfish.js"></script>
+
+
+<body id="top" role="document" class="class">
+<nav role="navigation">
+  <div id="project-navigation">
+    <div id="home-section" role="region" title="Quick navigation" class="nav-section">
+  <h2>
+    <a href="./index.html" rel="home">Home</a>
+  </h2>
+
+  <div id="table-of-contents-navigation">
+    <a href="./table_of_contents.html#pages">Pages</a>
+    <a href="./table_of_contents.html#classes">Classes</a>
+    <a href="./table_of_contents.html#methods">Methods</a>
+  </div>
+</div>
+
+    <div id="search-section" role="search" class="project-section initially-hidden">
+  <form action="#" method="get" accept-charset="utf-8">
+    <div id="search-field-wrapper">
+      <input id="search-field" role="combobox" aria-label="Search"
+             aria-autocomplete="list" aria-controls="search-results"
+             type="text" name="search" placeholder="Search" spellcheck="false"
+             title="Type to search, Up and Down to navigate, Enter to load">
+    </div>
+
+    <ul id="search-results" aria-label="Search Results"
+        aria-busy="false" aria-expanded="false"
+        aria-atomic="false" class="initially-hidden"></ul>
+  </form>
+</div>
+
+  </div>
+
+  
+
+  <div id="class-metadata">
+    
+    <div id="parent-class-section" class="nav-section">
+  <h3>Parent</h3>
+
+  
+  <p class="link"><a href="Object.html">Object</a>
+  
+</div>
+
+    
+    
+    <!-- Method Quickref -->
+<div id="method-list-section" class="nav-section">
+  <h3>Methods</h3>
+
+  <ul class="link-list" role="directory">
+    
+    <li ><a href="#method-c-new">::new</a>
+    
+    <li ><a href="#method-i-Parser">#Parser</a>
+    
+    <li ><a href="#method-i-add_node">#add_node</a>
+    
+    <li ><a href="#method-i-add_relation">#add_relation</a>
+    
+    <li ><a href="#method-i-add_way">#add_way</a>
+    
+    <li ><a href="#method-i-file_stats">#file_stats</a>
+    
+    <li ><a href="#method-i-get_geometry">#get_geometry</a>
+    
+    <li ><a href="#method-i-parse_to_collection">#parse_to_collection</a>
+    
+    <li ><a href="#method-i-read_notes_to_mongo">#read_notes_to_mongo</a>
+    
+    <li ><a href="#method-i-read_pbf_to_mongo">#read_pbf_to_mongo</a>
+    
+    <li ><a href="#method-i-reset_parser">#reset_parser</a>
+    
+  </ul>
+</div>
+
+  </div>
+</nav>
+
+<main role="main" aria-labelledby="class-OSMGeoJSONMongo">
+  <h1 id="class-OSMGeoJSONMongo" class="class">
+    class OSMGeoJSONMongo
+  </h1>
+
+  <section class="description">
+    
+  </section>
+
+  
+  
+  
+  <section id="5Buntitled-5D" class="documentation-section">
+    
+
+    
+
+    
+
+    
+    <section class="attribute-method-details" class="method-section">
+      <header>
+        <h3>Attributes</h3>
+      </header>
+
+      
+      <div id="attribute-i-file" class="method-detail">
+        <div class="method-heading attribute-method-heading">
+          <span class="method-name">file</span><span
+            class="attribute-access-type">[R]</span>
+        </div>
+
+        <div class="method-description">
+        
+        
+        
+        </div>
+      </div>
+      
+      <div id="attribute-i-missing_nodes" class="method-detail">
+        <div class="method-heading attribute-method-heading">
+          <span class="method-name">missing_nodes</span><span
+            class="attribute-access-type">[R]</span>
+        </div>
+
+        <div class="method-description">
+        
+        
+        
+        </div>
+      </div>
+      
+      <div id="attribute-i-n_count" class="method-detail">
+        <div class="method-heading attribute-method-heading">
+          <span class="method-name">n_count</span><span
+            class="attribute-access-type">[R]</span>
+        </div>
+
+        <div class="method-description">
+        
+        
+        
+        </div>
+      </div>
+      
+      <div id="attribute-i-parser" class="method-detail">
+        <div class="method-heading attribute-method-heading">
+          <span class="method-name">parser</span><span
+            class="attribute-access-type">[R]</span>
+        </div>
+
+        <div class="method-description">
+        
+        
+        
+        </div>
+      </div>
+      
+      <div id="attribute-i-r_count" class="method-detail">
+        <div class="method-heading attribute-method-heading">
+          <span class="method-name">r_count</span><span
+            class="attribute-access-type">[R]</span>
+        </div>
+
+        <div class="method-description">
+        
+        
+        
+        </div>
+      </div>
+      
+      <div id="attribute-i-w_count" class="method-detail">
+        <div class="method-heading attribute-method-heading">
+          <span class="method-name">w_count</span><span
+            class="attribute-access-type">[R]</span>
+        </div>
+
+        <div class="method-description">
+        
+        
+        
+        </div>
+      </div>
+      
+    </section>
+    
+
+    
+     <section id="public-class-5Buntitled-5D-method-details" class="method-section">
+       <header>
+         <h3>Public Class Methods</h3>
+       </header>
+
+    
+      <div id="method-c-new" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">new</span><span
+            class="method-args">(database, host, port)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="new-source">
+            <pre><span class="ruby-comment"># File OSMGeoJSONMongo.rb, line 32</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">database</span>, <span class="ruby-identifier">host</span>, <span class="ruby-identifier">port</span>) <span class="ruby-comment">#This would be a particular area that we import. (eg. Nepal)</span>
+        <span class="ruby-keyword">begin</span>
+                <span class="ruby-identifier">client</span> = <span class="ruby-constant">Mongo</span><span class="ruby-operator">::</span><span class="ruby-constant">MongoClient</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">host</span>,<span class="ruby-identifier">port</span>)
+                <span class="ruby-ivar">@db</span> = <span class="ruby-identifier">client</span>[<span class="ruby-identifier">database</span>]
+
+                <span class="ruby-comment">#Collections</span>
+                <span class="ruby-ivar">@nodes</span> = <span class="ruby-ivar">@db</span>[<span class="ruby-string">&#39;nodes&#39;</span>]
+                <span class="ruby-ivar">@ways</span>  = <span class="ruby-ivar">@db</span>[<span class="ruby-string">&#39;ways&#39;</span>]
+                <span class="ruby-ivar">@relations</span>  = <span class="ruby-ivar">@db</span>[<span class="ruby-string">&#39;relations&#39;</span>]
+                <span class="ruby-ivar">@notes</span> = <span class="ruby-ivar">@db</span>[<span class="ruby-string">&#39;notes&#39;</span>]
+                <span class="ruby-identifier">puts</span> <span class="ruby-node">&quot;Successfully connected to #{database}&quot;</span>
+        <span class="ruby-keyword">rescue</span>
+                <span class="ruby-identifier">puts</span> <span class="ruby-string">&quot;Oops, unable to connect to client -- is it running?&quot;</span>
+                <span class="ruby-identifier">exit</span>
+        <span class="ruby-keyword">end</span>
+
+        <span class="ruby-ivar">@missing_nodes</span>=<span class="ruby-value">0</span>
+        <span class="ruby-ivar">@empty_lines</span> = <span class="ruby-value">0</span>
+        <span class="ruby-ivar">@empty_geometries</span> = <span class="ruby-value">0</span>
+
+        <span class="ruby-ivar">@n_count</span> = <span class="ruby-value">0</span>
+        <span class="ruby-ivar">@w_count</span> = <span class="ruby-value">0</span>
+        <span class="ruby-ivar">@r_count</span> = <span class="ruby-value">0</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+    </section>
+  
+     <section id="public-instance-5Buntitled-5D-method-details" class="method-section">
+       <header>
+         <h3>Public Instance Methods</h3>
+       </header>
+
+    
+      <div id="method-i-Parser" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">Parser</span><span
+            class="method-args">(file)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Initialize the pbf parser from the file</p>
+          
+          
+
+          
+          <div class="method-source-code" id="Parser-source">
+            <pre><span class="ruby-comment"># File OSMGeoJSONMongo.rb, line 58</span>
+<span class="ruby-keyword">def</span> <span class="ruby-constant">Parser</span>(<span class="ruby-identifier">file</span>)
+        <span class="ruby-ivar">@file</span> = <span class="ruby-identifier">file</span>
+        <span class="ruby-ivar">@parser</span> = <span class="ruby-constant">PbfParser</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">file</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-add_node" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">add_node</span><span
+            class="method-args">(node)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="add_node-source">
+            <pre><span class="ruby-comment"># File OSMGeoJSONMongo.rb, line 83</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">add_node</span>(<span class="ruby-identifier">node</span>)
+        <span class="ruby-identifier">this_node</span> = {}
+        <span class="ruby-identifier">this_node</span>[<span class="ruby-value">:date</span>] = <span class="ruby-constant">Time</span>.<span class="ruby-identifier">at</span>(<span class="ruby-identifier">node</span>[<span class="ruby-value">:timestamp</span>]<span class="ruby-operator">/</span><span class="ruby-value">1000</span>).<span class="ruby-identifier">utc</span>
+        <span class="ruby-identifier">this_node</span>[<span class="ruby-value">:id</span>] = <span class="ruby-identifier">node</span>[<span class="ruby-value">:id</span>]
+        <span class="ruby-identifier">this_node</span>[<span class="ruby-value">:geometry</span>]={<span class="ruby-value">:type=</span><span class="ruby-operator">&gt;</span><span class="ruby-string">&#39;Point&#39;</span>, <span class="ruby-value">:coordinates=</span><span class="ruby-operator">&gt;</span>[<span class="ruby-identifier">node</span>[<span class="ruby-value">:lon</span>],<span class="ruby-identifier">node</span>[<span class="ruby-value">:lat</span>]]} <span class="ruby-comment">#Critical to swap these</span>
+        <span class="ruby-identifier">this_node</span>[<span class="ruby-value">:type</span>]=<span class="ruby-string">&quot;Feature&quot;</span>
+        <span class="ruby-identifier">this_node</span>[<span class="ruby-value">:properties</span>]=<span class="ruby-identifier">node</span>
+        <span class="ruby-keyword">return</span> <span class="ruby-ivar">@nodes</span>.<span class="ruby-identifier">insert</span>(<span class="ruby-identifier">this_node</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-add_relation" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">add_relation</span><span
+            class="method-args">(relation)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="add_relation-source">
+            <pre><span class="ruby-comment"># File OSMGeoJSONMongo.rb, line 127</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">add_relation</span>(<span class="ruby-identifier">relation</span>)
+        <span class="ruby-identifier">this_relation</span> = {}
+        <span class="ruby-identifier">this_relation</span>[<span class="ruby-value">:date</span>] = <span class="ruby-constant">Time</span>.<span class="ruby-identifier">at</span>(<span class="ruby-identifier">relation</span>[<span class="ruby-value">:timestamp</span>]<span class="ruby-operator">/</span><span class="ruby-value">1000</span>).<span class="ruby-identifier">utc</span>
+        <span class="ruby-identifier">this_relation</span>[<span class="ruby-value">:id</span>]=<span class="ruby-identifier">relation</span>[<span class="ruby-value">:id</span>]
+        <span class="ruby-identifier">this_relation</span>[<span class="ruby-value">:geometry</span>]={<span class="ruby-value">:type=</span><span class="ruby-operator">&gt;</span><span class="ruby-string">&quot;GeometryCollection&quot;</span>,<span class="ruby-value">:geometries=</span><span class="ruby-operator">&gt;</span>[]}
+        <span class="ruby-identifier">this_relation</span>[<span class="ruby-value">:type</span>]=<span class="ruby-string">&quot;Feature&quot;</span>
+        <span class="ruby-identifier">this_relation</span>[<span class="ruby-value">:properties</span>]=<span class="ruby-identifier">relation</span>
+
+        <span class="ruby-ivar">@missing_nodes</span> = <span class="ruby-value">0</span>
+        <span class="ruby-ivar">@empty_lines</span> = <span class="ruby-value">0</span>
+        <span class="ruby-ivar">@empty_geomtries</span> =<span class="ruby-value">0</span>
+
+        <span class="ruby-identifier">relation</span>[<span class="ruby-value">:members</span>][<span class="ruby-value">:nodes</span>].<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">node_ref</span><span class="ruby-operator">|</span>
+                <span class="ruby-identifier">geometry</span> = <span class="ruby-identifier">get_geometry</span>(<span class="ruby-ivar">@nodes</span>, <span class="ruby-identifier">node_ref</span>)
+                <span class="ruby-keyword">unless</span> <span class="ruby-identifier">geometry</span>.<span class="ruby-identifier">nil?</span>
+                        <span class="ruby-identifier">this_relation</span>[<span class="ruby-value">:geometries</span>] <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">geometry</span>
+                <span class="ruby-keyword">else</span>
+                        <span class="ruby-ivar">@missing_nodes</span> <span class="ruby-operator">+=</span> <span class="ruby-value">1</span>
+                <span class="ruby-keyword">end</span>
+        <span class="ruby-keyword">end</span>
+
+        <span class="ruby-identifier">relation</span>[<span class="ruby-value">:members</span>][<span class="ruby-value">:ways</span>].<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">way_ref</span><span class="ruby-operator">|</span>
+                <span class="ruby-identifier">geometry</span> = <span class="ruby-identifier">get_geometry</span>(<span class="ruby-ivar">@ways</span>, <span class="ruby-identifier">way_ref</span>)
+                <span class="ruby-keyword">unless</span> <span class="ruby-identifier">geometry</span>.<span class="ruby-identifier">nil?</span>
+                        <span class="ruby-identifier">this_relation</span>[<span class="ruby-value">:geometries</span>] <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">geometry</span>
+                <span class="ruby-keyword">else</span>
+                        <span class="ruby-ivar">@empty_lines</span> <span class="ruby-operator">+=</span> <span class="ruby-value">1</span>
+                <span class="ruby-keyword">end</span>
+        <span class="ruby-keyword">end</span>
+
+        <span class="ruby-keyword">if</span> <span class="ruby-identifier">this_relation</span>[<span class="ruby-value">:geometry</span>][<span class="ruby-value">:geometries</span>].<span class="ruby-identifier">empty?</span>
+                <span class="ruby-ivar">@empty_geometries</span> <span class="ruby-operator">+=</span><span class="ruby-value">1</span>
+                <span class="ruby-identifier">this_relation</span>.<span class="ruby-identifier">delete</span>(<span class="ruby-value">:geometry</span>)
+        <span class="ruby-keyword">end</span>
+
+        <span class="ruby-keyword">return</span> <span class="ruby-ivar">@relations</span>.<span class="ruby-identifier">insert</span>(<span class="ruby-identifier">this_relation</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-add_way" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">add_way</span><span
+            class="method-args">(way)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="add_way-source">
+            <pre><span class="ruby-comment"># File OSMGeoJSONMongo.rb, line 93</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">add_way</span>(<span class="ruby-identifier">way</span>)
+        <span class="ruby-identifier">this_line</span> = {}
+        <span class="ruby-identifier">this_line</span>[<span class="ruby-value">:id</span>] = <span class="ruby-identifier">way</span>[<span class="ruby-value">:id</span>]
+        <span class="ruby-identifier">this_line</span>[<span class="ruby-value">:date</span>] = <span class="ruby-constant">Time</span>.<span class="ruby-identifier">at</span>(<span class="ruby-identifier">way</span>[<span class="ruby-value">:timestamp</span>]<span class="ruby-operator">/</span><span class="ruby-value">1000</span>).<span class="ruby-identifier">utc</span>
+
+        <span class="ruby-comment">#Determine the type of geometry based on if it&#39;s closed or not.  Could mis-identify, but it&#39;s the best we can do.</span>
+        <span class="ruby-identifier">this_line</span>[<span class="ruby-value">:geometry</span>] = {<span class="ruby-value">:type=</span><span class="ruby-operator">&gt;</span><span class="ruby-string">&quot;LineString&quot;</span>, <span class="ruby-value">:coordinates=</span><span class="ruby-operator">&gt;</span>[]}
+        <span class="ruby-identifier">this_line</span>[<span class="ruby-value">:type</span>]=<span class="ruby-string">&quot;Feature&quot;</span>
+        <span class="ruby-identifier">this_line</span>[<span class="ruby-value">:properties</span>]=<span class="ruby-identifier">way</span>
+
+        <span class="ruby-comment">#Query the nodes collection for the coords of each point it references</span>
+        <span class="ruby-identifier">way</span>[<span class="ruby-value">:refs</span>].<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">node_id</span><span class="ruby-operator">|</span>
+                <span class="ruby-identifier">coords</span> = <span class="ruby-identifier">get_geometry</span>(<span class="ruby-ivar">@nodes</span>, <span class="ruby-identifier">node_id</span>)
+                <span class="ruby-keyword">if</span> <span class="ruby-identifier">coords</span>
+                        <span class="ruby-identifier">this_line</span>[<span class="ruby-value">:geometry</span>][<span class="ruby-value">:coordinates</span>] <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">coords</span>[<span class="ruby-string">&quot;coordinates&quot;</span>]
+                <span class="ruby-keyword">end</span>
+        <span class="ruby-keyword">end</span>
+
+        <span class="ruby-keyword">if</span> <span class="ruby-identifier">this_line</span>[<span class="ruby-value">:geometry</span>][<span class="ruby-value">:coordinates</span>].<span class="ruby-identifier">empty?</span>
+                <span class="ruby-ivar">@empty_lines</span> <span class="ruby-operator">+=</span><span class="ruby-value">1</span>
+                <span class="ruby-identifier">this_line</span>[<span class="ruby-value">:coordinates_error</span>] = <span class="ruby-keyword">true</span>
+                <span class="ruby-identifier">this_line</span>.<span class="ruby-identifier">delete</span>(<span class="ruby-value">:geometry</span>)
+        <span class="ruby-keyword">else</span>
+                <span class="ruby-keyword">if</span> (<span class="ruby-identifier">this_line</span>[<span class="ruby-value">:geometry</span>][<span class="ruby-value">:coordinates</span>].<span class="ruby-identifier">count</span> <span class="ruby-operator">&gt;</span> <span class="ruby-value">2</span>) <span class="ruby-keyword">and</span> (
+                                <span class="ruby-identifier">this_line</span>[<span class="ruby-value">:geometry</span>][<span class="ruby-value">:coordinates</span>].<span class="ruby-identifier">first</span><span class="ruby-operator">==</span><span class="ruby-identifier">this_line</span>[<span class="ruby-value">:geometry</span>][<span class="ruby-value">:coordinates</span>].<span class="ruby-identifier">last</span>)
+                                <span class="ruby-identifier">this_line</span>[<span class="ruby-value">:closed</span>] = <span class="ruby-keyword">true</span>
+                <span class="ruby-keyword">elsif</span> <span class="ruby-identifier">this_line</span>[<span class="ruby-value">:geometry</span>][<span class="ruby-value">:coordinates</span>].<span class="ruby-identifier">count</span><span class="ruby-operator">==</span><span class="ruby-value">1</span>
+                        <span class="ruby-identifier">this_line</span>[<span class="ruby-value">:geometry</span>][<span class="ruby-value">:coordinates</span>] = <span class="ruby-identifier">this_line</span>[<span class="ruby-value">:geometry</span>][<span class="ruby-value">:coordinates</span>].<span class="ruby-identifier">first</span>
+                        <span class="ruby-identifier">this_line</span>[<span class="ruby-value">:geometry</span>][<span class="ruby-value">:type</span>] = <span class="ruby-string">&quot;Point&quot;</span>
+                <span class="ruby-keyword">end</span>
+        <span class="ruby-keyword">end</span>
+        <span class="ruby-keyword">return</span> <span class="ruby-ivar">@ways</span>.<span class="ruby-identifier">insert</span>(<span class="ruby-identifier">this_line</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-file_stats" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">file_stats</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="file_stats-source">
+            <pre><span class="ruby-comment"># File OSMGeoJSONMongo.rb, line 165</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">file_stats</span>
+        <span class="ruby-identifier">test_parser</span> = <span class="ruby-constant">PbfParser</span>.<span class="ruby-identifier">new</span>(<span class="ruby-ivar">@file</span>)
+        <span class="ruby-keyword">while</span> <span class="ruby-identifier">test_parser</span>.<span class="ruby-identifier">next</span>
+                <span class="ruby-keyword">unless</span> <span class="ruby-identifier">test_parser</span>.<span class="ruby-identifier">nodes</span>.<span class="ruby-identifier">empty?</span>
+                        <span class="ruby-ivar">@n_count</span><span class="ruby-operator">+=</span> <span class="ruby-identifier">test_parser</span>.<span class="ruby-identifier">nodes</span>.<span class="ruby-identifier">size</span>
+                <span class="ruby-keyword">end</span>
+                <span class="ruby-keyword">unless</span> <span class="ruby-identifier">test_parser</span>.<span class="ruby-identifier">ways</span>.<span class="ruby-identifier">empty?</span>
+                        <span class="ruby-ivar">@w_count</span><span class="ruby-operator">+=</span> <span class="ruby-identifier">test_parser</span>.<span class="ruby-identifier">ways</span>.<span class="ruby-identifier">size</span>
+                <span class="ruby-keyword">end</span>
+                <span class="ruby-keyword">unless</span> <span class="ruby-identifier">test_parser</span>.<span class="ruby-identifier">relations</span>.<span class="ruby-identifier">empty?</span>
+                        <span class="ruby-ivar">@r_count</span><span class="ruby-operator">+=</span> <span class="ruby-identifier">test_parser</span>.<span class="ruby-identifier">relations</span>.<span class="ruby-identifier">size</span>
+                <span class="ruby-keyword">end</span>
+        <span class="ruby-keyword">end</span>
+        <span class="ruby-identifier">puts</span> <span class="ruby-node">&quot;Nodes: #{@n_count}, Ways: #{@w_count}, Relations: #{@r_count}&quot;</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-get_geometry" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">get_geometry</span><span
+            class="method-args">(coll, id)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="get_geometry-source">
+            <pre><span class="ruby-comment"># File OSMGeoJSONMongo.rb, line 69</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">get_geometry</span>(<span class="ruby-identifier">coll</span>, <span class="ruby-identifier">id</span>)
+        <span class="ruby-identifier">geo</span> = <span class="ruby-identifier">coll</span>.<span class="ruby-identifier">find</span>({<span class="ruby-string">&quot;id&quot;</span>=<span class="ruby-operator">&gt;</span><span class="ruby-identifier">id</span>},
+        <span class="ruby-identifier">opts</span> = {
+                <span class="ruby-value">:sort</span>  =<span class="ruby-operator">&gt;</span>[<span class="ruby-string">&quot;properties.version&quot;</span>, <span class="ruby-constant">Mongo</span><span class="ruby-operator">::</span><span class="ruby-constant">DESCENDING</span>],
+                <span class="ruby-value">:fields=</span><span class="ruby-operator">&gt;</span>{<span class="ruby-string">&quot;_id&quot;</span>=<span class="ruby-operator">&gt;</span><span class="ruby-value">0</span>,<span class="ruby-string">&quot;geometry&quot;</span>=<span class="ruby-operator">&gt;</span><span class="ruby-value">1</span>}}).<span class="ruby-identifier">first</span>
+
+        <span class="ruby-keyword">unless</span> <span class="ruby-identifier">geo</span>.<span class="ruby-identifier">nil?</span>
+                <span class="ruby-keyword">return</span> <span class="ruby-identifier">geo</span>[<span class="ruby-string">&quot;geometry&quot;</span>]
+        <span class="ruby-keyword">else</span>
+                <span class="ruby-ivar">@missing_nodes</span> <span class="ruby-operator">+=</span><span class="ruby-value">1</span>
+                <span class="ruby-keyword">return</span> <span class="ruby-keyword">nil</span>
+        <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-parse_to_collection" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">parse_to_collection</span><span
+            class="method-args">(object_type, lim=nil)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="parse_to_collection-source">
+            <pre><span class="ruby-comment"># File OSMGeoJSONMongo.rb, line 181</span>
+    <span class="ruby-keyword">def</span> <span class="ruby-identifier">parse_to_collection</span>(<span class="ruby-identifier">object_type</span>, <span class="ruby-identifier">lim</span>=<span class="ruby-keyword">nil</span>)
+            <span class="ruby-identifier">start_time</span> = <span class="ruby-constant">Time</span>.<span class="ruby-identifier">now</span>
+<span class="ruby-identifier">puts</span> <span class="ruby-node">&quot;Started #{object_type} import at: #{start_time}&quot;</span>
+            <span class="ruby-identifier">reset_parser</span> <span class="ruby-comment">#Reset the parser because &#39;seek&#39; does not work</span>
+
+            <span class="ruby-ivar">@missing_nodes</span> = <span class="ruby-value">0</span>
+            <span class="ruby-identifier">index</span> = <span class="ruby-value">0</span>
+            <span class="ruby-identifier">add_func</span> = <span class="ruby-identifier">method</span>(<span class="ruby-node">&quot;add_#{object_type[0..-2]}&quot;</span>)
+            <span class="ruby-identifier">count</span> = <span class="ruby-identifier">eval</span>(<span class="ruby-node">&quot;@#{object_type[0]}_count&quot;</span>)
+
+            <span class="ruby-keyword">while</span> <span class="ruby-ivar">@parser</span>.<span class="ruby-identifier">next</span>
+                    <span class="ruby-keyword">unless</span> <span class="ruby-ivar">@parser</span>.<span class="ruby-identifier">send</span>(<span class="ruby-identifier">object_type</span>).<span class="ruby-identifier">nil?</span>
+                            <span class="ruby-keyword">if</span> <span class="ruby-identifier">lim</span>
+                                    <span class="ruby-identifier">to_parse</span> = <span class="ruby-ivar">@parser</span>.<span class="ruby-identifier">send</span>(<span class="ruby-identifier">object_type</span>).<span class="ruby-identifier">first</span>(<span class="ruby-identifier">lim</span>)
+                            <span class="ruby-keyword">else</span>
+                                    <span class="ruby-identifier">to_parse</span> = <span class="ruby-ivar">@parser</span>.<span class="ruby-identifier">send</span>(<span class="ruby-identifier">object_type</span>)
+                            <span class="ruby-keyword">end</span>
+                            <span class="ruby-identifier">to_parse</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">obj</span><span class="ruby-operator">|</span>
+                                    <span class="ruby-keyword">begin</span>
+                                            <span class="ruby-identifier">add_func</span>.<span class="ruby-identifier">call</span>(<span class="ruby-identifier">obj</span>)
+                                            <span class="ruby-identifier">index</span> <span class="ruby-operator">+=</span> <span class="ruby-value">1</span>
+                                    <span class="ruby-keyword">rescue</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">e</span>
+                                            <span class="ruby-identifier">p</span> <span class="ruby-identifier">$!</span>
+                                            <span class="ruby-comment">#p e.backtrace</span>
+                                            <span class="ruby-keyword">begin</span>
+                                                    <span class="ruby-identifier">type</span>[<span class="ruby-string">&quot;tags&quot;</span>].<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">k</span>,<span class="ruby-identifier">v</span><span class="ruby-operator">|</span>
+                                                            <span class="ruby-identifier">k</span>.<span class="ruby-identifier">gsub!</span>(<span class="ruby-string">&#39;.&#39;</span>,<span class="ruby-string">&#39;_&#39;</span>)
+                                                    <span class="ruby-keyword">end</span>
+                                                    <span class="ruby-identifier">add_func</span>.<span class="ruby-identifier">call</span>(<span class="ruby-identifier">obj</span>)
+                                            <span class="ruby-keyword">rescue</span>
+                                                    <span class="ruby-keyword">next</span>
+                                            <span class="ruby-keyword">end</span>
+                                    <span class="ruby-keyword">end</span>
+                                    <span class="ruby-keyword">if</span> <span class="ruby-identifier">index</span><span class="ruby-operator">%</span><span class="ruby-value">2000</span><span class="ruby-operator">==</span><span class="ruby-value">0</span>
+                                            <span class="ruby-identifier">puts</span> <span class="ruby-node">&quot;Processed #{index} of #{count} #{object_type}&quot;</span>
+                                            <span class="ruby-keyword">if</span> <span class="ruby-identifier">index</span><span class="ruby-operator">%</span><span class="ruby-value">10000</span><span class="ruby-operator">==</span><span class="ruby-value">0</span>
+                            <span class="ruby-identifier">rate</span> = <span class="ruby-identifier">index</span><span class="ruby-operator">/</span>(<span class="ruby-constant">Time</span>.<span class="ruby-identifier">now</span>() <span class="ruby-operator">-</span> <span class="ruby-identifier">start_time</span>) <span class="ruby-comment">#Tweets processed / seconds elapsed</span>
+                            <span class="ruby-identifier">mins</span> = (<span class="ruby-identifier">count</span><span class="ruby-operator">-</span><span class="ruby-identifier">index</span>) <span class="ruby-operator">/</span> <span class="ruby-identifier">rate</span> <span class="ruby-operator">/</span> <span class="ruby-value">60</span>         <span class="ruby-comment">#minutes left = tweets left * seconds/tweet / 60</span>
+                            <span class="ruby-identifier">hours</span> = <span class="ruby-identifier">mins</span> <span class="ruby-operator">/</span> <span class="ruby-value">60</span>
+                            <span class="ruby-identifier">puts</span> <span class="ruby-node">&quot;Status: #{&#39;%.2f&#39; % rate} #{object_type}/Second. #{&#39;%.2f&#39; % mins} minutes left or #{&#39;%.2f&#39; % hours} hours.&quot;</span>
+                                            <span class="ruby-keyword">end</span>
+                                    <span class="ruby-keyword">end</span>
+                            <span class="ruby-keyword">end</span>
+                    <span class="ruby-keyword">end</span>
+            <span class="ruby-keyword">end</span>
+
+            <span class="ruby-identifier">puts</span> <span class="ruby-string">&quot;Adding the appropriate indexes&quot;</span>
+            <span class="ruby-keyword">begin</span>
+                    <span class="ruby-identifier">eval</span> <span class="ruby-node">%Q{@#{object_type}.ensure_index(:id =&gt; 1)}</span>
+                    <span class="ruby-identifier">eval</span> <span class="ruby-node">%Q{@#{object_type}.ensure_index(&quot;properties.changeset&quot; =&gt; 1)}</span>
+                    <span class="ruby-identifier">eval</span> <span class="ruby-node">%Q{@#{object_type}.ensure_index(&quot;properties.uid&quot; =&gt; 1)}</span>
+                    <span class="ruby-identifier">eval</span> <span class="ruby-node">%Q{@#{object_type}.ensure_index(:geometry =&gt;&quot;2dsphere&quot;)}</span>
+            <span class="ruby-keyword">rescue</span>
+                    <span class="ruby-identifier">puts</span> <span class="ruby-string">&quot;Error creating index&quot;</span>
+                    <span class="ruby-identifier">p</span> <span class="ruby-identifier">$!</span>
+            <span class="ruby-keyword">end</span>
+    <span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-read_notes_to_mongo" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">read_notes_to_mongo</span><span
+            class="method-args">(api_notes, lim=nil)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="read_notes_to_mongo-source">
+            <pre><span class="ruby-comment"># File OSMGeoJSONMongo.rb, line 256</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">read_notes_to_mongo</span>(<span class="ruby-identifier">api_notes</span>, <span class="ruby-identifier">lim</span>=<span class="ruby-keyword">nil</span>)
+        <span class="ruby-identifier">i</span> = <span class="ruby-value">1</span>
+        <span class="ruby-identifier">api_notes</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">note</span><span class="ruby-operator">|</span>
+                <span class="ruby-identifier">print</span> <span class="ruby-node">&quot;\r[INFO]: Storing #{i} of #{api_notes.size}...&quot;</span>
+                <span class="ruby-identifier">note</span>[<span class="ruby-string">&quot;id&quot;</span>] = <span class="ruby-identifier">note</span>[<span class="ruby-string">&quot;properties&quot;</span>][<span class="ruby-string">&quot;id&quot;</span>]
+                <span class="ruby-identifier">note</span>[<span class="ruby-string">&quot;geometry&quot;</span>] = {<span class="ruby-value">:type</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-string">&quot;Point&quot;</span>, <span class="ruby-value">:coordinates</span> =<span class="ruby-operator">&gt;</span> [<span class="ruby-identifier">note</span>[<span class="ruby-string">&quot;geometry&quot;</span>][<span class="ruby-string">&quot;coordinates&quot;</span>][<span class="ruby-value">1</span>], <span class="ruby-identifier">note</span>[<span class="ruby-string">&quot;geometry&quot;</span>][<span class="ruby-string">&quot;coordinates&quot;</span>][<span class="ruby-value">0</span>]]} <span class="ruby-comment">#Critical to swap these</span>
+                <span class="ruby-ivar">@notes</span>.<span class="ruby-identifier">insert</span>(<span class="ruby-identifier">note</span>)
+                <span class="ruby-identifier">i</span> <span class="ruby-operator">+=</span> <span class="ruby-value">1</span>
+        <span class="ruby-keyword">end</span>
+        <span class="ruby-identifier">puts</span> <span class="ruby-string">&quot;\n[OK]: This batch done.&quot;</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-read_pbf_to_mongo" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">read_pbf_to_mongo</span><span
+            class="method-args">(lim=nil)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="read_pbf_to_mongo-source">
+            <pre><span class="ruby-comment"># File OSMGeoJSONMongo.rb, line 239</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">read_pbf_to_mongo</span>(<span class="ruby-identifier">lim</span>=<span class="ruby-keyword">nil</span>)
+        <span class="ruby-identifier">puts</span> <span class="ruby-string">&quot;\nImporting Nodes&quot;</span>
+        <span class="ruby-identifier">parse_to_collection</span>(<span class="ruby-string">&#39;nodes&#39;</span>, <span class="ruby-identifier">lim</span>=<span class="ruby-identifier">lim</span>)
+
+        <span class="ruby-identifier">puts</span> <span class="ruby-string">&quot;\nImporting Ways&quot;</span>
+        <span class="ruby-identifier">parse_to_collection</span>(<span class="ruby-string">&#39;ways&#39;</span>, <span class="ruby-identifier">lim</span>=<span class="ruby-identifier">lim</span>)
+        <span class="ruby-identifier">puts</span> <span class="ruby-node">&quot;Missing node count: #{@missing_nodes}&quot;</span>
+        <span class="ruby-identifier">puts</span> <span class="ruby-node">&quot;Empty way count: #{@empty_lines}&quot;</span>
+
+        <span class="ruby-identifier">puts</span> <span class="ruby-string">&quot;\nImporting Relations&quot;</span>
+        <span class="ruby-identifier">parse_to_collection</span>(<span class="ruby-string">&#39;relations&#39;</span>, <span class="ruby-identifier">lim</span>=<span class="ruby-identifier">lim</span>)
+        <span class="ruby-identifier">puts</span> <span class="ruby-node">&quot;Missing node count: #{@missing_nodes}&quot;</span>
+        <span class="ruby-identifier">puts</span> <span class="ruby-node">&quot;Empty way count: #{@empty_lines}&quot;</span>
+        <span class="ruby-identifier">puts</span> <span class="ruby-node">&quot;Empty Geometries: #{@empty_geometries}&quot;</span>
+
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-reset_parser" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">reset_parser</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>If the function @parser.seek(0) worked, it would be better…</p>
+          
+          
+
+          
+          <div class="method-source-code" id="reset_parser-source">
+            <pre><span class="ruby-comment"># File OSMGeoJSONMongo.rb, line 64</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">reset_parser</span>
+        <span class="ruby-ivar">@parser</span> = <span class="ruby-keyword">nil</span>
+        <span class="ruby-ivar">@parser</span> = <span class="ruby-constant">PbfParser</span>.<span class="ruby-identifier">new</span>(<span class="ruby-ivar">@file</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+    </section>
+  
+  </section>
+</main>
+
+
+<footer id="validator-badges" role="contentinfo">
+  <p><a href="http://validator.w3.org/check/referer">Validate</a>
+  <p>Generated by <a href="http://rdoc.rubyforge.org">RDoc</a> 4.1.1.
+  <p>Based on <a href="http://deveiate.org/projects/Darkfish-Rdoc/">Darkfish</a> by <a href="http://deveiate.org">Michael Granger</a>.
+</footer>
+

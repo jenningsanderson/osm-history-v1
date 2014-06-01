@@ -11,7 +11,7 @@ require 'rgeo'
 require 'csv'
 require 'json'
 
-'''Read in the Jobs & Use RGeo Appropriately'''
+#Read in the Jobs & Use RGeo Appropriately
 def load_job_geomtries_from_csv(csv)
   puts "Reading Jobs from CSV"
   jobs = CSV.read(csv)
@@ -28,7 +28,7 @@ def load_job_geomtries_from_csv(csv)
   return job_geometries
 end
 
-'''Load and parse the tiles history export from the OSM TM DB'''
+#Load and parse the tiles history export from the OSM TM DB
 def load_tiles_history_from_csv(csv)
   puts "Parsing tiles_history"
   tiles = CSV.read(csv)
@@ -40,7 +40,8 @@ def load_tiles_history_from_csv(csv)
   return tiles_history
 end
 
-'''Hit Mongo to get the changesets'''
+#Hit Mongo to get the changesets
+# TODO: This is a duplicate function from other files, need to refactor, rename
 def hit_mongo
   puts "Hitting Mongo"
   res = COLL.find(  selector = {'created_at'=>
@@ -53,6 +54,7 @@ def hit_mongo
   return res
 end
 
+#Write the job_geometries to a geojson file
 def write_geojson_jobs(job_geometries)
   jobs_geojson = GeoJSONWriter.new('jobs_geometries')
   jobs_geojson.add_options([:crs=>{:type=>:name,
@@ -88,10 +90,10 @@ if $0 == __FILE__
   number_changesets = res.count
 
   '''Write a changesets geojson file'''
-  # changesets_geojson = GeoJSONWriter.new('changeset_geometries_area_limited_intersects')
-  # changesets_geojson.add_options([:crs=>{:type=>:name,
-  #                                 :properties=>{:name=>"EPSG:900913"}}])
-  # changesets_geojson.write_header
+  changesets_geojson = GeoJSONWriter.new('geojson_exports/changeset_geometries_area_limited_within')
+  changesets_geojson.add_options([:crs=>{:type=>:name,
+                                   :properties=>{:name=>"EPSG:900913"}}])
+  changesets_geojson.write_header
 
   missing_jobs = [] #This is an array of changeset IDs that do not correspond with any TM Job
 
@@ -119,12 +121,12 @@ if $0 == __FILE__
     job_geometries.each do |job|
 
       #Check if the edit occured inside of a valid TM Job.
-      if set_geom.projection.intersects? job[:geometry]
+      if set_geom.projection.within? job[:geometry]
         job[:changesets] << changeset['id']
 
         '''Write the changeset to geojson?'''
-        # changesets_geojson.write_feature(RGeo::GeoJSON.encode(set_geom.projection),
-          # {:inside=>job[:id], :created_at=>changeset['created_at'].strftime("%Y-%m-%d %H:%M:%S")})
+        changesets_geojson.write_feature(RGeo::GeoJSON.encode(set_geom.projection),
+        {:inside=>job[:id], :created_at=>changeset['created_at'].strftime("%Y-%m-%d %H:%M:%S"), :user=>changeset['user']})
 
         #Call off the flag, if the flag is false
         unless has_job
@@ -153,7 +155,7 @@ if $0 == __FILE__
       end
 
       '''Tell the geojson file about it'''
-      # changesets_geojson.write_feature(RGeo::GeoJSON.encode(set_geom.projection), {:inside=>999, :created_at=>changeset['created_at'].strftime("%Y-%m-%d %H:%M:%S")})
+      #changesets_geojson.write_feature(RGeo::GeoJSON.encode(set_geom.projection), {:inside=>999, :created_at=>changeset['created_at'].strftime("%Y-%m-%d %H:%M:%S")})
     end
 
     if (index%1000).zero?
@@ -162,7 +164,7 @@ if $0 == __FILE__
   end
 
   '''Close the GeoJSON file'''
-  #changesets_geojson.write_footer
+  changesets_geojson.write_footer
 
   job_geometries.each do |job|
     puts "#{job[:id]}: Contains #{job[:changesets].count} changesets "

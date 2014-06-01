@@ -1,0 +1,19 @@
+Sat, 31 May 2014 17:24:03 -0600
+OSMAPIHitter.rb	Fri, 09 May 2014 13:09:59 -0600
+OSMGeoJSONMongo.rb	Thu, 29 May 2014 17:02:55 -0600
+changeset_version_analysis.rb	Thu, 15 May 2014 16:29:58 -0600
+comparing_conflict_users.rb	Sat, 24 May 2014 14:54:48 -0600
+conflict_nodes_to_kml.rb	Fri, 16 May 2014 11:37:27 -0600
+find_changesets_in_osm_tasks.rb	Sat, 31 May 2014 17:06:12 -0600
+geo_overlapping_changesets.rb	Sat, 31 May 2014 17:03:11 -0600
+get_changesets.rb	Tue, 27 May 2014 12:33:07 -0600
+osm_history_analysis.rb	Sat, 31 May 2014 17:21:41 -0600
+overlapping_changesets.rb	Fri, 16 May 2014 20:20:29 -0600
+overlapping_changesets_to_geojson.rb	Sat, 31 May 2014 14:19:48 -0600
+read_notes.rb	Tue, 22 Apr 2014 18:38:45 -0600
+read_pbf.rb	Fri, 09 May 2014 17:56:57 -0600
+ruby_r_analysis.rb	Tue, 27 May 2014 13:00:13 -0600
+user_changesets_sampled.rb	Sat, 24 May 2014 14:44:55 -0600
+user_contributions_by_day.rb	Sat, 31 May 2014 17:06:03 -0600
+users_changesets.rb	Tue, 27 May 2014 19:27:05 -0600
+visualize_changesets_by_users.rb	Sat, 31 May 2014 17:19:23 -0600

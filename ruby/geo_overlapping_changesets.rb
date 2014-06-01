@@ -41,7 +41,7 @@ end
 
 changeset_overlaps = {}
 
-
+#Find the overlapping changesets, currently counts all changesets, not just by user
 def calculate_overlap(res, country)
 
 	changeset_ids   = []
