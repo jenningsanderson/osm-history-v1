@@ -5,3 +5,10 @@
 *.png
 *.json
 *.csv
+
+
+#Silly shapes
+*.dbf
+*.shx
+*.prj
+*.shp

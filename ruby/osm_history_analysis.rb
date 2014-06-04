@@ -2,7 +2,7 @@ require 'mongo'
 
 #This is the main class for global variables & common functions to the analysis
 class OSMHistoryAnalysis
-	attr_reader :coll, :times
+	attr_reader :coll, :times, :geo_projected_factory
 
 	#Set the most common times for querying the database 
 	def set_query_times
@@ -22,6 +22,12 @@ class OSMHistoryAnalysis
 			}
 		}
 	end 
+
+	def build_factories
+		require 'rgeo'
+		@geo_projected_factory = RGeo::Geographic.projected_factory(:projection_proj4=>'+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs <>')
+
+	end
 
 	#Constructor: calls the query times function
     def initialize

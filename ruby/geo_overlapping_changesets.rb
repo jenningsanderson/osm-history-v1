@@ -1,5 +1,5 @@
+#Standard Requirements
 require 'json'
-require 'epic-geo'
 require 'mongo'
 require 'time'
 require 'csv'
@@ -8,131 +8,196 @@ require 'rsruby'
 require 'rgeo/geo_json'
 require 'rgeo'
 
-QUERY_TIME = {    :haiti=>{
-					:event=>Time.new(2010,1,12),
-                    :start=>Time.new(2010,01,12),
-                    :end  =>Time.new(2010,02,12)},
+#Custom Requirements
+require 'epic-geo'
+require_relative 'osm_history_analysis'
 
-                  :philippines=>{ 
-                  	:event=>Time.new(2013,11,8),
-                    :start=>Time.new(2013,11,8),
-                    :end  =>Time.new(2013,12,8)}
-               }
-#TOTAL_HOURS = ( QUERY_TIME[:haiti][:end].yday - QUERY_TIME[:haiti][:start].yday ) * 24 + 7
-GEO_PROJECTED_FACTORY = RGeo::Geographic.projected_factory(:projection_proj4=>'+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs <>')
+class CalculateOverlaps
+	attr_reader :user_overlaps
 
-
-def hit_mongo(dataset, limit)
-  #CONN = Mongo::MongoClient.new #Defaults to localhost
-  conn = Mongo::MongoClient.new('epic-analytics.cs.colorado.edu',27018)
-  db = conn[dataset]
-  coll = db['changesets']
-
-  puts "Connected to Mongo"
-
-	coll.find(
-  		selector ={:created_at=> {"$gt" => QUERY_TIME[dataset.to_sym][:start], "$lt"=> QUERY_TIME[dataset.to_sym][:end]},
-                   :area => {"$lt"=> 10000}},
-            opts ={:limit=>limit,
-                   :fields=>['id','user','node_count', 'geometry'],
-                   :sort=>'created_at'})
-end
-
-
-changeset_overlaps = {}
-
-#Find the overlapping changesets, currently counts all changesets, not just by user
-def calculate_overlap(res, country)
-
-	changeset_ids   = []
-	changeset_geoms = []
-	overlaps        = {}
-
-	#Build the two arrays
-	res.each do |changeset|
-		changeset_ids << changeset['id']
-		changeset_geoms << RGeo::GeoJSON.decode(changeset['geometry'].to_json, {:geo_factory=>GEO_PROJECTED_FACTORY, :json_parser=>:json})
+	def initialize(dataset)
+		@dataset = dataset
+		@osm_data = OSMHistoryAnalysis.new
 	end
 
-	puts "Working with #{changeset_geoms.count} changeset geometries"
+	def hit_mongo(limit=1000)
+		#CONN = Mongo::MongoClient.new #Defaults to localhost
+		conn = Mongo::MongoClient.new('epic-analytics.cs.colorado.edu',27018)
+		db = conn[@dataset]
+		coll = db['changesets']
 
-	#Iterate through each of the geometries
-	changeset_geoms.each_with_index do |geometry, index|
+		puts "Connected to Mongo"
 
-		this_id = changeset_ids[index]
-		overlaps[this_id] ||= 0
+		@changesets = coll.find(
+				selector ={ :created_at=> {"$gt" => @osm_data.times[@dataset.to_sym][:event], "$lt"=> @osm_data.times[@dataset.to_sym][:dw_end]},
+		               		:area => {"$lt"=> 10000}},
+		        
+		        opts ={ 	:limit=>limit,
+		               		:fields=>['id','user','node_count', 'geometry'],
+               				:sort=>'created_at'})
+		puts "Found #{@changesets.count} results"
+	end
 
-		#Now check each of the geometries starting from this one up for overlap
-		changeset_geoms[index..-1].each do |geo_test|
-			if geometry.intersects? geo_test
-				overlaps[this_id] += 1
+	def calculate_overlaps_changesets
+		#Build quick to access arrays
+		changeset_ids   = []
+		changeset_geoms = []
+		@overlapping_changesets = {}
+
+		#Build the reference arrays
+		@changesets.each do |changeset|
+			changeset_ids 	<< changeset['id']
+			changeset_geoms << RGeo::GeoJSON.decode(changeset['geometry'].to_json, {:geo_factory=>@osm_data.geo_projected_factory, :json_parser=>:json})
+		end
+		puts "Finished building reference arrays, rewinding"
+
+		@changesets.rewind!
+
+
+		#Iterate through the changesets, remember it's going in order of time.
+		changeset_geoms.each_with_index do |this_geometry, index|
+
+			this_changeset = changeset_ids[index]
+
+			@overlapping_changesets[this_changeset] ||= []
+
+			changeset_geoms[index+1..-1].each_with_index do |conflict_geometry, offset|
+
+				if conflict_geometry.intersects? this_geometry
+					@overlapping_changesets[this_changeset] << changeset_ids[index+offset]
+				end
+			end
+
+			if (index%50).zero?
+				print "#{index}."
 			end
 		end
-		if (index%50).zero?
-			print "#{index}."
+
+
+	end
+
+	def calculate_overlaps_users
+		#Build quick to access arrays
+		changeset_ids   = []
+		changeset_geoms = []
+		users           = []
+		overlaps        = {}
+
+		#Build the reference arrays
+		@changesets.each do |changeset|
+			changeset_ids 	<< changeset['id']
+			users 			<< changeset['user']
+			changeset_geoms << RGeo::GeoJSON.decode(changeset['geometry'].to_json, {:geo_factory=>@osm_data.geo_projected_factory, :json_parser=>:json})
+		end
+		puts "Finished building reference arrays, rewinding"
+
+		@changesets.rewind!
+		
+		@user_overlaps = {}
+
+
+		#Iterate through the changesets, remember it's going in order of time.
+		changeset_geoms.each_with_index do |this_geometry, index|
+
+			this_user 	  = users[index]
+			#Initialize that user in the users hash if they don't exist yet
+			@user_overlaps[this_user] ||= []
+
+			changeset_geoms[index..-1].each_with_index do |conflict_geometry, offset|
+
+				conflict_user = users[index+offset]
+				
+				#If it's the same user, don't process the count
+				unless conflict_user == this_user
+					if conflict_geometry.intersects? this_geometry
+						@user_overlaps[this_user] << conflict_user
+					end
+				end
+			end
+
+			if (index%50).zero?
+				print "#{index}."
+			end
 		end
 	end
 
-	to_plot = []
+	def graph_it
+		to_plot = @user_overlaps.map{|user,conflict_users| conflict_users.uniq.count}
+		r = RSRuby.instance
+		r.png("/Users/jenningsanderson/Dropbox/OSM_Behavioral_Analysis_CSCW/Images/user_changeset_geo_overlaps_probabilities#{@dataset}.png", :width=>800, :height=>400)
+		r.hist(to_plot, :ylab=>"Normalized Frequency", :xlab=>"Number of overlapping users", :main=>"Overlapping User Changesets in #{@dataset.capitalize}")
+		r.eval_R("dev.off()")
+	end
 
-	#Now show the results
-	# overlaps.sort_by{|id,val| val}.reverse.each do |changeset_id, overlaps|
-	# 	#puts "#{changeset_id} is overlapped by:  #{overlaps}"
-	# 	to_plot << overlaps
-	# end
+	def write_to_csv
+		CSV.open("csv_exports/user_changeset_geo_overlaps_#{@dataset}.csv",'w') do |csv|
+			csv << ['user','overlaps', 'changesets']
+			@user_overlaps.each do |user, conflict_users|
+				csv << [user, conflict_users.uniq.count, conflict_users.count]
+			end
+		end
+	end
 
-	to_plot = overlaps.map{|id,val| val}
-
-	r = RSRuby.instance
-	r.png("img_exports/changeset_geo_overlaps_#{country}.png", :width=>800, :height=>400)
-	r.hist(r.log(to_plot,:base=>10), :xlab=>"Number of Changesets", :ylab=>"Number of overlapping changesets", :main=>"Overlapping Changesets in #{country}")
-	r.eval_R("dev.off()")
-
+	def write_changeset_csv
+		CSV.open("csv_exports/changeset_geo_overlaps_#{@dataset}.csv",'w') do |csv|
+			csv << ['changeset', 'num_overlaps']
+			@overlapping_changesets.each do |changeset, overlaps_array|
+				csv << [changeset, overlaps_array.count]
+			end
+		end
+	end
 end
+
+
+#Find the overlapping changesets, currently counts all changesets, not just by user
+# def calculate_overlap(res, country)
+# 	puts "Working with #{changeset_geoms.count} changeset geometries"
+
+# 	#Iterate through each of the geometries
+# 	changeset_geoms.each_with_index do |geometry, index|
+
+# 		this_id = changeset_ids[index]
+# 		overlaps[this_id] ||= 0
+
+# 		#Now check each of the geometries starting from this one up for overlap
+# 		changeset_geoms[index..-1].each do |geo_test|
+# 			if geometry.intersects? geo_test
+# 				overlaps[this_id] += 1
+# 			end
+# 		end
+		
+# 	end
+
 
 
 
 if $0 == __FILE__
 
-	res_phil = hit_mongo('philippines', nil)
-	res_haiti = hit_mongo('haiti',nil)
+	dataset = ARGV[0]
 
-	calculate_overlap(res_haiti, "Haiti")
-	calculate_overlap(res_phil, "Philippines")
+	if dataset.nil?
+		puts "Please specify a dataset"
+		exit()
+	end
 
+	overlaps = CalculateOverlaps.new(dataset)
+	
+	puts "Hitting Mongo for #{dataset}"
+	overlaps.hit_mongo(limit=nil)
 
-	# r = RSRuby.instance
-	# r.png("img_exports/users_editing_per_hour.png",:height=>600,:width=>800)
-	# r.plot( :x => x_axis, 
-	#     :y => phil_users_by_hour,
-	#     :xlab=>"Hours Elapsed Since Event",
-	#     :ylab=>"Number of Users Editing",
-	#     :col =>"blue",
-	#     :type=>'l'
-	#    )
-	# r.lines(:x => x_axis,
-	# 	:y => haiti_users_by_hour,
-	# 	:col => "red"
-	#    )
-	# #Add the event, if applicable:
-	# #r.eval_R %Q{ text(0,50,"Event", 
-	# #			 pos = 2, cex = 1.5, srt = 90)
+	#puts "Calculating User Overlaps"
+	#overlaps.calculate_overlaps_users
 
-	# #}
-	# #r.abline(:v=>0)
-	# #Add the legend
-	# r.eval_R %Q{ legend(550,80, 					 # places a legend at the appropriate place 
-	# 			 c("Philippines","Haiti"),           # puts text in the legend 
- #                 lty=c(1,1), 				 		 # gives the legend appropriate symbols (lines)
- #                 lwd=c(2.5,2.5),col=c("blue","red"), # gives the legend lines the correct color and width
-	# 			 cex=1.5) 							 # Changes the font size 
-	# }
-	# r.eval_R('dev.off()')
+	puts "Calculating Changeset Overlaps"
+	overlaps.calculate_overlaps_changesets
 
+	#puts "Showing Results:"
+	#overlaps.user_overlaps.sort_by{|user,overlap| overlap.uniq.count}.reverse.each do |user, conflicts|
+	#	puts "#{user} is overlapped by:  #{conflicts.uniq.count} users with #{conflicts.count} changesets"
+	#end
+
+	#overlaps.graph_it
+	#overlaps.write_to_csv
+	overlaps.write_changeset_csv
 end
-
-
-
-
-
 

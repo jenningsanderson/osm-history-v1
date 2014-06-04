@@ -20,7 +20,6 @@ TOTAL_HOURS = ( QUERY_TIME[:haiti][:end].yday - QUERY_TIME[:haiti][:start].yday 
 
 
 
-
 def write_user_contributions_by_day(res, filename)
 	users = {}
 
@@ -72,9 +71,11 @@ def get_user_count_by_hour(res, dataset)
 		distinct_users_per_hour[hour] += users_array.uniq.count
 	end
 
-	distinct_users_per_hour.each_with_index do |val, i|
-	#	puts "Hour: #{i} -> #{val}"
-	end
+	#distinct_users_per_hour.each_with_index do |val, i|
+		#puts "Hour: #{i} -> #{val}"
+	#end
+
+	puts distinct_users_per_hour.sort.reverse
 
 	return distinct_users_per_hour
 
@@ -96,35 +97,48 @@ def hit_mongo(dataset)
                    :sort=>'created_at'})
 end
 
+class NodeContributionsByDay
+
+
+end
+
+
 
 
 if $0 == __FILE__
 
-	res_phil = hit_mongo('philippines')
+	# res_phil = hit_mongo('philippines')
+	# get_user_count_by_hour(res_phil, 'philippines')
+
 	res_haiti = hit_mongo('haiti')
+	get_user_count_by_hour(res_haiti, 'haiti')
 
-	#write_user_contributions_by_day(res, "user_contributions_#{dataset}.csv")
+	
 
-	haiti_users_by_hour = get_user_count_by_hour(res_haiti, 'haiti')
-	phil_users_by_hour  = get_user_count_by_hour(res_phil,  'philippines')
+	# res_haiti = hit_mongo('haiti')
 
-	#x_axis = (-166..TOTAL_HOURS-167).to_a
-	x_axis = (1..TOTAL_HOURS).to_a
+	# #write_user_contributions_by_day(res, "user_contributions_#{dataset}.csv")
 
-	#Plot it
-	r = RSRuby.instance
-	r.png("img_exports/users_editing_per_hour.png",:height=>600,:width=>800)
-	r.plot( :x => x_axis, 
-	    :y => phil_users_by_hour,
-	    :xlab=>"Hours Elapsed Since Event",
-	    :ylab=>"Number of Users Editing",
-	    :col =>"blue",
-	    :type=>'l'
-	   )
-	r.lines(:x => x_axis,
-		:y => haiti_users_by_hour,
-		:col => "red"
-	   )
+	# haiti_users_by_hour = get_user_count_by_hour(res_haiti, 'haiti')
+	# phil_users_by_hour  = get_user_count_by_hour(res_phil,  'philippines')
+
+	# #x_axis = (-166..TOTAL_HOURS-167).to_a
+	# x_axis = (1..TOTAL_HOURS).to_a
+
+	# #Plot it
+	# r = RSRuby.instance
+	# r.png("img_exports/users_editing_per_hour.png",:height=>600,:width=>800)
+	# r.plot( :x => x_axis, 
+	#     :y => phil_users_by_hour,
+	#     :xlab=>"Hours Elapsed Since Event",
+	#     :ylab=>"Number of Users Editing",
+	#     :col =>"blue",
+	#     :type=>'l'
+	#    )
+	# r.lines(:x => x_axis,
+	# 	:y => haiti_users_by_hour,
+	# 	:col => "red"
+	#    )
 	#Add the event, if applicable:
 	#r.eval_R %Q{ text(0,50,"Event", 
 	#			 pos = 2, cex = 1.5, srt = 90)
@@ -132,13 +146,13 @@ if $0 == __FILE__
 	#}
 	#r.abline(:v=>0)
 	#Add the legend
-	r.eval_R %Q{ legend(550,80, 					 # places a legend at the appropriate place 
-				 c("Philippines","Haiti"),           # puts text in the legend 
-                 lty=c(1,1), 				 		 # gives the legend appropriate symbols (lines)
-                 lwd=c(2.5,2.5),col=c("blue","red"), # gives the legend lines the correct color and width
-				 cex=1.5) 							 # Changes the font size 
-	}
-	r.eval_R('dev.off()')
+	# r.eval_R %Q{ legend(550,80, 					 # places a legend at the appropriate place 
+	# 			 c("Philippines","Haiti"),           # puts text in the legend 
+ #                 lty=c(1,1), 				 		 # gives the legend appropriate symbols (lines)
+ #                 lwd=c(2.5,2.5),col=c("blue","red"), # gives the legend lines the correct color and width
+	# 			 cex=1.5) 							 # Changes the font size 
+	# }
+	# r.eval_R('dev.off()')
 
 end
 
