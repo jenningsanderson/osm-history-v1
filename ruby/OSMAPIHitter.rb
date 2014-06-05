@@ -7,7 +7,6 @@ class InvalidAPIError < StandardError
 end
 
 class OSMAPIHitter
-
 	#Returns the hash payload of the input URI w.r.t API symbol.
 	def self.hit_API (uris)
 		puts "[START]: Hitting The OSM API for the requested URIs...."
