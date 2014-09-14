@@ -26,7 +26,6 @@ class OSMHistoryAnalysis
 	def build_factories
 		require 'rgeo'
 		@geo_projected_factory = RGeo::Geographic.projected_factory(:projection_proj4=>'+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs <>')
-
 	end
 
 	#Constructor: calls the query times function
