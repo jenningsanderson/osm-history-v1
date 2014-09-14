@@ -1,14 +1,18 @@
 *.lock
-*.qgs
+
+#Ignore data files
 *.geojson
 *.kml
 *.png
 *.json
 *.csv
 
-
-#Silly shapes
+#Silly shapefiles
 *.dbf
 *.shx
 *.prj
 *.shp
+
+#Ignore all QGIS files:
+*.qgs
+QGIS/*
