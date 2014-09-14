@@ -2,7 +2,7 @@
 title: OSM History
 
 description: Some OSM History Analysis
-baseurl: "osm-history" 
+baseurl: "/osm-history"
 
 # Build settings
 markdown: kramdown
