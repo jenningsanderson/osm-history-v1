@@ -1,8 +1,9 @@
 require 'json'
 require 'pp'
 require 'net/http'
-require './OSMAPIHitter.rb'
-require './OSMGeoJSONMongo.rb'
+
+require_relative 'OSMAPIHitter'
+require_relative 'OSMGeoJSONMongo.rb'
 
 URI_HAITI = ["http://api.openstreetmap.org/api/0.6/notes.json?limit=1500&closed=-1&bbox=-74.5532226563,17.8794313865,-71.7297363281,19.9888363024"]
 URI_PHILIPPINES = [

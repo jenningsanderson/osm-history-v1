@@ -17,19 +17,15 @@ class CalculateOverlaps
 
 	def initialize(dataset)
 		@dataset = dataset
-		@osm_data = OSMHistoryAnalysis.new
+		@osm_driver = OSMHistoryAnalysis.new
+		@osm_driver.build_factory # Gives access to geofactory
 	end
 
 	def hit_mongo(limit=1000)
-		#CONN = Mongo::MongoClient.new #Defaults to localhost
-		conn = Mongo::MongoClient.new('epic-analytics.cs.colorado.edu',27018)
-		db = conn[@dataset]
-		coll = db['changesets']
+		collection = @osm_driver.connect_to_mongo(db=@dataset, coll="changesets")
 
-		puts "Connected to Mongo"
-
-		@changesets = coll.find(
-				selector ={ :created_at=> {"$gt" => @osm_data.times[@dataset.to_sym][:event], "$lt"=> @osm_data.times[@dataset.to_sym][:dw_end]},
+		@changesets = collection.find(
+				selector ={ :created_at=> {"$gt" => @osm_driver.times[@dataset.to_sym][:event], "$lt"=> @osm_driver.times[@dataset.to_sym][:dw_end]},
 		               		:area => {"$lt"=> 10000}},
 		        
 		        opts ={ 	:limit=>limit,
@@ -47,7 +43,7 @@ class CalculateOverlaps
 		#Build the reference arrays
 		@changesets.each do |changeset|
 			changeset_ids 	<< changeset['id']
-			changeset_geoms << RGeo::GeoJSON.decode(changeset['geometry'].to_json, {:geo_factory=>@osm_data.geo_projected_factory, :json_parser=>:json})
+			changeset_geoms << RGeo::GeoJSON.decode(changeset['geometry'].to_json, {:geo_factory=>@osm_driver.geo_projected_factory, :json_parser=>:json})
 		end
 		puts "Finished building reference arrays, rewinding"
 
@@ -87,7 +83,7 @@ class CalculateOverlaps
 		@changesets.each do |changeset|
 			changeset_ids 	<< changeset['id']
 			users 			<< changeset['user']
-			changeset_geoms << RGeo::GeoJSON.decode(changeset['geometry'].to_json, {:geo_factory=>@osm_data.geo_projected_factory, :json_parser=>:json})
+			changeset_geoms << RGeo::GeoJSON.decode(changeset['geometry'].to_json, {:geo_factory=>@osm_driver.geo_projected_factory, :json_parser=>:json})
 		end
 		puts "Finished building reference arrays, rewinding"
 

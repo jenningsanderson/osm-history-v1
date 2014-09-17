@@ -1,53 +1,47 @@
 '''
+The OSMGeoJSONMongo reads a PBF file and wll create the appropriate collections in the database.
+
 PBF Parser from: https://github.com/planas/pbf_parser
 
 //These two are for MongoDB:
 gem install mongo
 gem install bson_ext
 
-//These two are for parsing PBF:
+//These two are for parsing PBF: (mac oriented)
 brew install protobuf-c
 gem install pbf_parser
-
-//General Info:
-With the size of this data, it should be more efficient to store everything
-together so we get a better idea and embed the references in each way, relation
-... We could potentially end up with an issue with duplicates if we try to update
-an area, but we could filter based on unique changesets -- as well as rely on
-official history files and simply drop the table whenever.
 '''
 
 require 'pp'
 require 'time'
 
-class OSMGeoJSONMongo
-	''' Is there something amuck with the timestamp?'''
+require_relative '../osm_history_analysis'
 
-	require 'mongo'
+class OSMGeoJSONMongo
+
 	require 'pbf_parser'
 	require 'date'
 
 	attr_reader :parser, :missing_nodes, :n_count, :w_count, :r_count, :file
 
-	def initialize(database, host, port) #This would be a particular area that we import. (eg. Nepal)
-		begin
-			client = Mongo::MongoClient.new(host,port)
-			@db = client[database]
+	#Pass in a database connection and it will connect to the proper collections
+	def initialize(db) #This would be a particular area that we import. (eg. Nepal)
+		
+		@db = db
 
-			#Collections
-			@nodes = @db['nodes']
-			@ways  = @db['ways']
+		begin
+			@nodes 		= @db['nodes']
+			@ways  		= @db['ways']
 			@relations  = @db['relations']
-			@notes = @db['notes']
-			puts "Successfully connected to #{database}"
+			@notes 		= @db['notes']
 		rescue
-			puts "Oops, unable to connect to client -- is it running?"
+			puts "Oops, unable to connect to collections in Mongo"
 			exit
 		end
 
-		@missing_nodes=0
-		@empty_lines = 0
-		@empty_geometries = 0
+		@missing_nodes		= 0
+		@empty_lines 		= 0
+		@empty_geometries 	= 0
 
 		@n_count = 0
 		@w_count = 0
@@ -55,17 +49,18 @@ class OSMGeoJSONMongo
 	end
 
 	#Initialize the pbf parser from the file
-	def Parser(file)
+	def open_parser(file)
 		@file = file
 		@parser = PbfParser.new(file)
 	end
 
-	#If the function @parser.seek(0) worked, it would be better...
+	#If the function @parser.seek(0) worked, this would be prettier...
 	def reset_parser
 		@parser = nil
 		@parser = PbfParser.new(@file)
 	end
 
+	#Search for the newest geometry for an object (For importing ways)
 	def get_geometry(coll, id)
 		geo = coll.find({"id"=>id},
 		opts = {
@@ -80,9 +75,10 @@ class OSMGeoJSONMongo
 		end
 	end
 
+	#The simplest form of import
 	def add_node(node)
 		this_node = {}
-		this_node[:date] = Time.at(node[:timestamp]/1000).utc
+		this_node[:date] = Time.at(node[:timestamp]/1000).utc #This parses the string that is the date
 		this_node[:id] = node[:id]
 		this_node[:geometry]={:type=>'Point', :coordinates=>[node[:lon],node[:lat]]} #Critical to swap these
 		this_node[:type]="Feature"
@@ -90,6 +86,7 @@ class OSMGeoJSONMongo
 		return @nodes.insert(this_node)
 	end
 
+	#Ways are a bit more complicated because it will iterate over the nodes collection to find it's parts.
 	def add_way(way)
 		this_line = {}
 		this_line[:id] = way[:id]
@@ -124,6 +121,7 @@ class OSMGeoJSONMongo
 		return @ways.insert(this_line)
 	end
 
+	#These are a lot uglier
 	def add_relation(relation)
 		this_relation = {}
 		this_relation[:date] = Time.at(relation[:timestamp]/1000).utc
@@ -180,7 +178,7 @@ class OSMGeoJSONMongo
 
 	def parse_to_collection(object_type, lim=nil)
 		start_time = Time.now
-    puts "Started #{object_type} import at: #{start_time}"
+    	puts "Started #{object_type} import at: #{start_time}"
 		reset_parser #Reset the parser because 'seek' does not work
 
 		@missing_nodes = 0
@@ -236,20 +234,26 @@ class OSMGeoJSONMongo
 		end
 	end
 
-	def read_pbf_to_mongo(lim=nil)
-		puts "\nImporting Nodes"
-		parse_to_collection('nodes', lim=lim)
+	def read_pbf_to_mongo(lim=nil, types=[:nodes, :ways, :relations])
+		if types.include? :nodes
+			puts "\nImporting Nodes"
+			parse_to_collection('nodes', lim=lim)
+		end
 
-		puts "\nImporting Ways"
-		parse_to_collection('ways', lim=lim)
-		puts "Missing node count: #{@missing_nodes}"
-		puts "Empty way count: #{@empty_lines}"
+		if types.include? :ways
+			puts "\nImporting Ways"
+			parse_to_collection('ways', lim=lim)
+			puts "Missing node count: #{@missing_nodes}"
+			puts "Empty way count: #{@empty_lines}"
+		end
 
-		puts "\nImporting Relations"
-		parse_to_collection('relations', lim=lim)
-		puts "Missing node count: #{@missing_nodes}"
-		puts "Empty way count: #{@empty_lines}"
-		puts "Empty Geometries: #{@empty_geometries}"
+		if types.include? :relations
+			puts "\nImporting Relations"
+			parse_to_collection('relations', lim=lim)
+			puts "Missing node count: #{@missing_nodes}"
+			puts "Empty way count: #{@empty_lines}"
+			puts "Empty Geometries: #{@empty_geometries}"
+		end
 
 	end
 

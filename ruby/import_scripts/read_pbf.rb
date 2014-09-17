@@ -10,12 +10,14 @@ brew install protobuf-c (Mac)
 gem install pbf_parser
 '''
 
-require './OSMGeoJSONMongo.rb'
+require_relative 'OSMGeoJSONMongo'
 
 if __FILE__==$0
+	#This isn't the most robust command line parser, but it works.
 	if ARGV[0].nil?
 		puts "Call this in the following manner: "
 		puts "\truby read_pbf.rb [database name] [pbf file]"
+		puts "\tOptional arguments include: limit=, port=, and host="
 	else
 		db 		= ARGV[0]
 		file 	= ARGV[1]
@@ -36,10 +38,13 @@ if __FILE__==$0
 		end
 
 		limit ||= nil
-		port  ||= 27017
-		host  ||= 'localhost'
+		port  ||= nil
+		host  ||= nil
 
-		port = port.to_i
+		unless port.nil?
+			port = port.to_i
+		end
+		
 		unless limit.nil?
 			limit = limit.to_i
 		end
@@ -51,14 +56,17 @@ if __FILE__==$0
 		puts "Host: #{host}"
 		puts "port: #{port}"
 
-		#Create connection
-		conn = OSMGeoJSONMongo.new(db, host, port) #Defaults
-		parser = conn.Parser(file)
+		#Create connection to Mongo
+		osm_driver = OSMHistoryAnalysis.new(:local)
+		mongo_db = osm_driver.connect_to_mongo(db=db, coll=nil, host=host, port=port)
+		
+		conn = OSMGeoJSONMongo.new(mongo_db)
+		conn.open_parser(file)
 
 		puts "Information about your file"
 		conn.file_stats
 
 		puts "Beginning Mongo Import"
-		conn.read_pbf_to_mongo(lim=limit)
+		conn.read_pbf_to_mongo(lim=limit, [:nodes])
 	end
 end

@@ -1,4 +1,5 @@
 source 'http://rubygems.org/'
 
-# Use the epic-geo gem for the latest helpers
+
+# Use the epic-geo gem for the latest 
 gem 'epic-geo', github: 'jenningsanderson/epic-geo'
