@@ -34,12 +34,12 @@ if __FILE__ == $0
   require_relative '../osm_history_analysis'
   options = OpenStruct.new
   opts = OptionParser.new do |opts|
-    opts.banner = "Usage: ruby import_changesets.rb -d DATABASE -c COLLECTION  [-l LIMIT]"
+    opts.banner = "Usage: ruby import_changesets.rb -d DATABASE -c COLLECTION  [-l LIMIT]\n\tIterate over a collection and hit the API for the changeset information."
     opts.separator "\nSpecific options:"
 
     opts.on("-d", "--database Database Name",
             "Name of Database (Haiti, Philippines)"){|v| options.db = v }
-    opts.on("-c", "--Collection Collection Name",
+    opts.on("-c", "--Collection Name",
             "Type of OSM object (nodes, ways, relations)"){|v| options.coll = v }
     opts.on("-l", "--limit [LIMIT]",
             "[Optional] Limit of objects to parse"){|v| options.limit = v.to_i }
@@ -54,6 +54,13 @@ if __FILE__ == $0
     exit
   end
 
+
+#########################################################################
+########################  RUNTIME  ######################################
+#########################################################################
+
+
+#TODO: This is currently hitting the API far too many times!
 
   #Connect to Mongo
   osm_driver = OSMHistoryAnalysis.new(:local)
@@ -79,6 +86,11 @@ if __FILE__ == $0
   distinct_changesets.each_with_index do |changeset, i|
     
     begin
+
+      #Look for this changeset in the changeset collection.
+      
+
+
       this_changeset = changeset_api.hit_api(changeset)
 
       #Standardize the attributes:
@@ -91,6 +103,9 @@ if __FILE__ == $0
 
       #Now process the box:
       this_changeset["geometry"] = process_bbox this_changeset
+
+      #Tell it what type of objects we're running it for
+      this_changeset[options.coll] = true
 
       upsert_to_mongo(changesets, changeset, this_changeset)
 

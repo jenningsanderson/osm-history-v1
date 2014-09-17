@@ -1,8 +1,17 @@
 Import Scripts
 =============================
 
+###import_changesets.rb
+	Usage: ruby import_changesets.rb -d DATABASE -c COLLECTION  [-l LIMIT]
+		Iterate over a collection and hit the API for the changeset information.
 
+	Specific options:
+	    -d, --database Database Name     Name of Database (Haiti, Philippines)
+	    -c, --Collection Name            Type of OSM object (nodes, ways, relations)
+	    -l, --limit [LIMIT]              [Optional] Limit of objects to parse
+	    -h, --help                       Show this message
 
+This script performs an **upsert** on the changeset collection for a given database.  It collects changesets from the nodes/ways/relations collections and then hits the API for the details of that changeset.
 
 
 
