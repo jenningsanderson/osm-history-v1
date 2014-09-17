@@ -1,5 +1,15 @@
 Import Scripts
 =============================
+The first import script **read_pbf** will parse the PBF file and create the nodes, ways, and relations collections in the database.  The last two scripts will gather data from these collections in order to build the changesets and users collections.
+
+
+###read_pbf.rb
+	Call this in the following manner: 
+		ruby read_pbf.rb [database name] [pbf file]
+		Optional arguments include: limit=, port=, and host=
+
+
+
 
 ###import_changesets.rb
 	Usage: ruby import_changesets.rb -d DATABASE -c COLLECTION  [-l LIMIT]

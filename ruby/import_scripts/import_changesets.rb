@@ -59,9 +59,6 @@ if __FILE__ == $0
 ########################  RUNTIME  ######################################
 #########################################################################
 
-
-#TODO: This is currently hitting the API far too many times!
-
   #Connect to Mongo
   osm_driver = OSMHistoryAnalysis.new(:local)
   object_collection = osm_driver.connect_to_mongo(db=options.db, coll=options.coll)
@@ -86,23 +83,25 @@ if __FILE__ == $0
   distinct_changesets.each_with_index do |changeset, i|
     
     begin
+      looking_for_it = changesets.find({"id"=>changeset})
 
       #Look for this changeset in the changeset collection.
-      
+      unless looking_for_it.has_next?
+        this_changeset = changeset_api.hit_api(changeset)
 
+        #Standardize the attributes:
+        this_changeset["id_str"] = this_changeset["id"]
+        this_changeset["id"]     = this_changeset["id"].to_i
+        
+        #Now process dates:
+        this_changeset["created_at"] = osm_driver.parse_date(this_changeset["created_at"])
+        this_changeset["closed_at"] = osm_driver.parse_date(this_changeset["closed_at"])
 
-      this_changeset = changeset_api.hit_api(changeset)
-
-      #Standardize the attributes:
-      this_changeset["id_str"] = this_changeset["id"]
-      this_changeset["id"]     = this_changeset["id"].to_i
-      
-      #Now process dates:
-      this_changeset["created_at"] = osm_driver.parse_date(this_changeset["created_at"])
-      this_changeset["closed_at"] = osm_driver.parse_date(this_changeset["closed_at"])
-
-      #Now process the box:
-      this_changeset["geometry"] = process_bbox this_changeset
+        #Now process the box:
+        this_changeset["geometry"] = process_bbox this_changeset
+      else
+        this_changeset = looking_for_it.first
+      end
 
       #Tell it what type of objects we're running it for
       this_changeset[options.coll] = true
