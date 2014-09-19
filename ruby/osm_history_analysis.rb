@@ -5,11 +5,12 @@
 
 class OSMHistoryAnalysis
 	require 'time'
+	require 'descriptive-statistics' 
 	
 	attr_reader :times, :geo_projected_factory
 
 	#Set the most common times for querying the database 
-	def set_query_times
+	def dates
 		@times = {    
 			:haiti=>{
 				:one_week_before=>	Time.new(2010,01,5),
@@ -23,11 +24,17 @@ class OSMHistoryAnalysis
 				:event			=>	Time.new(2013,11,8),
 				:one_week_after	=>	Time.new(2013,11,15),
 				:dw_end			=>	Time.new(2013,12,8)
+			},
+			:phil=>{ 
+				:one_week_before=>	Time.new(2013,11,1),
+				:event			=>	Time.new(2013,11,8),
+				:one_week_after	=>	Time.new(2013,11,15),
+				:dw_end			=>	Time.new(2013,12,8)
 			}
 		}
 	end
 
-	#Method to return the relevant bounding boxes.
+	#Method to return the relevant bounding boxes
 	def bounding_box(country)
 		case country
 		when :haiti
@@ -43,7 +50,6 @@ class OSMHistoryAnalysis
 	#Constructor: calls the query times function
     def initialize(mongo_dest)
 		puts "Initialized OSMHistory"
-		set_query_times
 
 		case mongo_dest
 		when :local
@@ -57,7 +63,10 @@ class OSMHistoryAnalysis
 
     #Require RGeo and build a factory for geo calculations and functions
     def build_factory
-		require 'rgeo' #This is the same
+		require 'rgeo'
+		require 'rgeo/geo_json'
+
+		#Using a web mercator projection here because the data was added to the map in this projection, and the two are very close in latitude, so the errors are similar.
 		@geo_projected_factory = RGeo::Geographic.projected_factory(:projection_proj4=>'+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs <>')
 	
 		#TODO

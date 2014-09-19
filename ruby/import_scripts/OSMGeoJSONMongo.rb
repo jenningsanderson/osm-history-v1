@@ -61,11 +61,12 @@ class OSMGeoJSONMongo
 	end
 
 	#Search for the newest geometry for an object (For importing ways)
+	#Should cross-reference with changesets in the future.
 	def get_geometry(coll, id)
 		geo = coll.find({"id"=>id},
 		opts = {
-			:sort  =>["properties.version", Mongo::DESCENDING],
-			:fields=>{"_id"=>0,"geometry"=>1}}).first
+			:sort  =>["properties.version", :desc],
+			:fields=>{"geometry"=>1}}).first
 
 		unless geo.nil?
 			return geo["geometry"]
@@ -86,7 +87,8 @@ class OSMGeoJSONMongo
 		return @nodes.insert(this_node)
 	end
 
-	#Ways are a bit more complicated because it will iterate over the nodes collection to find it's parts.
+	# Ways are a bit more complicated because it will iterate over the 
+	# nodes collection to find their parts.
 	def add_way(way)
 		this_line = {}
 		this_line[:id] = way[:id]
@@ -97,27 +99,29 @@ class OSMGeoJSONMongo
 		this_line[:type]="Feature"
 		this_line[:properties]=way
 
-		#Query the nodes collection for the coords of each point it references
-		way[:refs].each do |node_id|
-			coords = get_geometry(@nodes, node_id)
-			if coords
-				this_line[:geometry][:coordinates] << coords["coordinates"]
-			end
-		end
+		#Just skip the geometries in these for now.
 
-		if this_line[:geometry][:coordinates].empty?
-			@empty_lines +=1
-			this_line[:coordinates_error] = true
-			this_line.delete(:geometry)
-		else
-			if (this_line[:geometry][:coordinates].count > 2) and (
-					this_line[:geometry][:coordinates].first==this_line[:geometry][:coordinates].last)
-					this_line[:closed] = true
-			elsif this_line[:geometry][:coordinates].count==1
-				this_line[:geometry][:coordinates] = this_line[:geometry][:coordinates].first
-				this_line[:geometry][:type] = "Point"
-			end
-		end
+		#Query the nodes collection for the coords of each point it references
+		# way[:refs].each do |node_id|
+		# 	coords = get_geometry(@nodes, node_id.to_i)
+		# 	if coords
+		# 		this_line[:geometry][:coordinates] << coords["coordinates"]
+		# 	end
+		# end
+
+		# if this_line[:geometry][:coordinates].empty?
+		# 	@empty_lines +=1
+		# 	this_line[:coordinates_error] = true
+		# 	this_line.delete(:geometry)
+		# else
+		# 	if (this_line[:geometry][:coordinates].count > 2) and (
+		# 			this_line[:geometry][:coordinates].first==this_line[:geometry][:coordinates].last)
+		# 			this_line[:closed] = true
+		# 	elsif this_line[:geometry][:coordinates].count==1
+		# 		this_line[:geometry][:coordinates] = this_line[:geometry][:coordinates].first
+		# 		this_line[:geometry][:type] = "Point"
+		# 	end
+		# end
 		return @ways.insert(this_line)
 	end
 
@@ -134,28 +138,30 @@ class OSMGeoJSONMongo
 		@empty_lines = 0
 		@empty_geomtries =0
 
-		relation[:members][:nodes].each do |node_ref|
-			geometry = get_geometry(@nodes, node_ref)
-			unless geometry.nil?
-				this_relation[:geometries] << geometry
-			else
-				@missing_nodes += 1
-			end
-		end
+		#skip these too.
 
-		relation[:members][:ways].each do |way_ref|
-			geometry = get_geometry(@ways, way_ref)
-			unless geometry.nil?
-				this_relation[:geometries] << geometry
-			else
-				@empty_lines += 1
-			end
-		end
+		# relation[:members][:nodes].each do |node_ref|
+		# 	geometry = get_geometry(@nodes, node_ref)
+		# 	unless geometry.nil?
+		# 		this_relation[:geometries] << geometry
+		# 	else
+		# 		@missing_nodes += 1
+		# 	end
+		# end
 
-		if this_relation[:geometry][:geometries].empty?
-			@empty_geometries +=1
-			this_relation.delete(:geometry)
-		end
+		# relation[:members][:ways].each do |way_ref|
+		# 	geometry = get_geometry(@ways, way_ref)
+		# 	unless geometry.nil?
+		# 		this_relation[:geometries] << geometry
+		# 	else
+		# 		@empty_lines += 1
+		# 	end
+		# end
+
+		# if this_relation[:geometry][:geometries].empty?
+		# 	@empty_geometries +=1
+		# 	this_relation.delete(:geometry)
+		# end
 
 		return @relations.insert(this_relation)
 	end

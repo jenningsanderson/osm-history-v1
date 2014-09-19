@@ -66,7 +66,9 @@ if __FILE__==$0
 		puts "Information about your file"
 		conn.file_stats
 
-		puts "Beginning Mongo Import"
-		conn.read_pbf_to_mongo(lim=limit, [:nodes])
+
+		#Commenting out the actual import to just get file stats
+		# puts "Beginning Mongo Import"
+		# conn.read_pbf_to_mongo(lim=limit, [:ways, :relations])
 	end
 end

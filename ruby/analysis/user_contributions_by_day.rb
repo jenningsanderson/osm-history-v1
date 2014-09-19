@@ -1,54 +1,47 @@
-require 'json'
 require 'epic-geo'
-require 'mongo'
 require 'time'
 require 'csv'
-require 'json'
 require 'rsruby'
 
-QUERY_TIME = {    :haiti=>{
-					:event=>Time.new(2010,1,12,21,53,00),
-                    :start=>Time.new(2010,01,12),
-                    :end  =>Time.new(2010,02,12)},
-
-                  :philippines=>{ 
-                  	:event=>Time.new(2013,11,8),
-                    :start=>Time.new(2013,11,8),
-                    :end  =>Time.new(2013,12,8)}
-               }
-TOTAL_HOURS = ( QUERY_TIME[:haiti][:end].yday - QUERY_TIME[:haiti][:start].yday ) * 24 + 7
-
-
-
-def write_user_contributions_by_day(res, filename)
+#Export a CSV of User Contributions by day (By User)
+def write_user_contributions_by_day(res, filename) #This must be sorted by created_at date.
 	users = {}
 
-	offset = res.first['created_at'].yday
+	offset = res.first['created_at'].yday #The first day of changesets
 	res.rewind!
 
 	res.each do |changeset|
+
 		#Define a spot for this user in the user hash
 		this_user = changeset['user']
-		users[this_user] ||= {:name=>changeset['user'],:node_count=>Array.new(31,0)}
-
+		users[this_user] ||= Array.new(31,0)
+			                 
 		#Parse the date, it should be sorted already, so we should be able to take the day of the year
-		unless changeset['node_count'].nil?
-			users[this_user][:node_count][changeset['created_at'].yday - offset] += changeset['node_count']
+		unless changeset['node_count'].nil? #If so, we have an error
+			users[this_user][changeset['created_at'].yday - offset] += changeset['node_count']
+		else
+			puts "Changeset #{changeset["id"]} didn't have a node_count"
 		end
 	end
 
 	#Write the data out to a CSV to plot it in R later
-	CSV.open("csv_exports/#{filename}",'w') do |csv|
+	CSV.open("../../exports/csv/confirmation/#{filename}",'w') do |csv|
 		csv << ['User','NodeCount','DaysSinceEvent']
 
-		users.sort_by{|user,info| info[:node_count].inject(:+)}.reverse.first(20).each_with_index do |(user, info), index|
+		users.sort_by{ |user, info| info.inject(:+) }.reverse.each_with_index do |(user, info), index|
 			this_user = user
-			info[:node_count].each_with_index do |cnt, index|
+			
+			info.each_with_index do |cnt, index|
 				csv << [user, cnt, index+1]
 			end
 		end
 	end #close the csv
 end
+
+
+
+
+
 
 def get_user_count_by_hour(res, dataset)
 
@@ -81,39 +74,67 @@ def get_user_count_by_hour(res, dataset)
 
 end
 
-def hit_mongo(dataset)
-  #CONN = Mongo::MongoClient.new #Defaults to localhost
-  conn = Mongo::MongoClient.new('epic-analytics.cs.colorado.edu',27018)
-  db = conn[dataset]
-  coll = db['changesets']
-
-  puts "Connected to Mongo"
-
-	coll.find(
-  		selector ={:created_at=> {"$gt" => QUERY_TIME[dataset.to_sym][:start], "$lt"=> QUERY_TIME[dataset.to_sym][:end]} },#,
-                   #:node_count => {"$lt"=> 10000}},
-            opts ={:limit=>nil,
-                   :fields=>['user','node_count', 'created_at'],
-                   :sort=>'created_at'})
-end
-
-class NodeContributionsByDay
-
-
-end
 
 
 
+#############################################################################
+#######################          RUNTIME        #############################
+#############################################################################
 
 if $0 == __FILE__
+	require_relative '../osm_history_analysis'
 
-	# res_phil = hit_mongo('philippines')
+	#Open connections
+	osm_driver = OSMHistoryAnalysis.new(:local)
+	
+	haiti = osm_driver.connect_to_mongo(db='haiti', coll='changesets')
+	phil  = osm_driver.connect_to_mongo(db='phil',  coll='changesets')
+
+
+
+	############################   BY DAY CALCULATIONS   ####################################
+
+	#Calcualte for Haiti by day:
+	country = 'haiti'
+	haiti_changesets = haiti.find(
+		{
+			:created_at => {'$gt' => osm_driver.dates[:haiti][:event],
+							'$lt' => osm_driver.dates[:haiti][:dw_end]
+						   },
+			:node_count => {'$ne' => nil}
+		})
+
+	puts "Found #{haiti_changesets.count} results"
+
+	puts haiti_changesets.collect{|entry| entry["node_count"]}.inject(:+)
+
+
+
+	# write_user_contributions_by_day(haiti_changesets, "haiti_user_nodes_by_day_all.csv")
+
+
+	# #Calculate for Phil by day:
+	# phil_changesets = phil.find(
+	# 	{
+	# 		:created_at => {'$gt' => osm_driver.dates[:philippines][:event],
+	# 						'$lt' => osm_driver.dates[:philippines][:dw_end]
+	# 					   },
+	# 		:node_count => {'$ne' => nil}
+	# 	})
+
+	# puts "Found #{phil_changesets.count} results"
+
+	# write_user_contributions_by_day(phil_changesets, "phil_user_nodes_by_day_all.csv") 
+
+
+
+	#############################  BY HOUR CALCULATIONS   ################################
+
+
 	# get_user_count_by_hour(res_phil, 'philippines')
 
-	res_haiti = hit_mongo('haiti')
-	get_user_count_by_hour(res_haiti, 'haiti')
-
-	
+	#res_haiti = hit_mongo('haiti')
+	#get_user_count_by_hour(res_haiti, 'haiti')
 
 	# res_haiti = hit_mongo('haiti')
 

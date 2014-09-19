@@ -45,17 +45,24 @@ if $0 == __FILE__
 	#Open API accessor
 	user_api = OSMAPI.new("http://api.openstreetmap.org/api/0.6/user/")
 
-	distinct_users = changesets.distinct("uid").sort #Sort it for safety
+	distinct_users = changesets.distinct("uid").collect{|i| i.to_i}.sort #Sort it for safety
 	if options.limit
 		distinct_users = distinct_users.first(options.limit)
 	end
 
+	distinct_users = [1806350]
+
 	success = LogFile.new("logs/user","failed")
 	failed  = LogFile.new("logs/user","success")
 
-	distinct_users.each do |user_id|
+	puts "Found #{distinct_users.count} distinct users"
+
+	distinct_users.each_with_index do |user_id, index|
 		begin
+			puts "User ID: #{user_id}"
 			user = user_api.hit_api(user_id)
+
+			puts user
 
 			#Standardize the id_strs:
 			user["id_str"] = user["id"]
@@ -63,9 +70,14 @@ if $0 == __FILE__
 			user["account_created"] = osm_driver.parse_date(user["account_created"])
 			insert_to_mongo(users, user_id, user)
 			success.log(user_id)
-		rescue
-			failed.log(user_id)
-			failed.log($!)
+		rescue => e
+			p $!
+			puts e.backtrace
+			failed.log(user_id.to_s)
+		end
+
+		if (index%10).zero?
+			puts "#{index}.."
 		end
 	end
 	success.close

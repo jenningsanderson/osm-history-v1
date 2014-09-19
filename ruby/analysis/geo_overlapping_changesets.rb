@@ -1,32 +1,27 @@
 #Standard Requirements
 require 'json'
-require 'mongo'
 require 'time'
 require 'csv'
-require 'json'
 require 'rsruby'
-require 'rgeo/geo_json'
-require 'rgeo'
 
 #Custom Requirements
 require 'epic-geo'
-require_relative 'osm_history_analysis'
+require_relative '../osm_history_analysis'
 
 class CalculateOverlaps
-	attr_reader :user_overlaps
+	attr_reader :user_overlaps, :factory, :dataset, :osm_driver
 
-	def initialize(dataset)
+	def initialize(dataset, limit=1000)
 		@dataset = dataset
-		@osm_driver = OSMHistoryAnalysis.new
-		@osm_driver.build_factory # Gives access to geofactory
-	end
+		@osm_driver = OSMHistoryAnalysis.new(:local)
+		@factory = @osm_driver.build_factory # Gives access to geofactory
+	
+		changesets_mongo = @osm_driver.connect_to_mongo(db=dataset, coll="changesets")
 
-	def hit_mongo(limit=1000)
-		collection = @osm_driver.connect_to_mongo(db=@dataset, coll="changesets")
-
-		@changesets = collection.find(
-				selector ={ :created_at=> {"$gt" => @osm_driver.times[@dataset.to_sym][:event], "$lt"=> @osm_driver.times[@dataset.to_sym][:dw_end]},
-		               		:area => {"$lt"=> 10000}},
+		@changesets = changesets_mongo.find(
+				selector ={ :created_at=> {"$gt" => @osm_driver.dates[@dataset.to_sym][:event], 
+										   "$lt" => @osm_driver.dates[@dataset.to_sym][:dw_end]},
+						    :"geometry.type" => "Polygon"},
 		        
 		        opts ={ 	:limit=>limit,
 		               		:fields=>['id','user','node_count', 'geometry'],
@@ -43,24 +38,39 @@ class CalculateOverlaps
 		#Build the reference arrays
 		@changesets.each do |changeset|
 			changeset_ids 	<< changeset['id']
-			changeset_geoms << RGeo::GeoJSON.decode(changeset['geometry'].to_json, {:geo_factory=>@osm_driver.geo_projected_factory, :json_parser=>:json})
+			changeset_geoms << RGeo::GeoJSON.decode(changeset['geometry'].to_json, {:geo_factory=>factory, :json_parser=>:json})
 		end
 		puts "Finished building reference arrays, rewinding"
 
 		@changesets.rewind!
 
-
 		#Iterate through the changesets, remember it's going in order of time.
+		# changeset_geoms.each_with_index do |this_geometry, index|
+
+		# 	this_changeset = changeset_ids[index]
+
+		# 	@overlapping_changesets[this_changeset] ||= []
+
+		# 	changeset_geoms[index+1..-1].each_with_index do |conflict_geometry, offset|
+
+		# 		if conflict_geometry.intersects? this_geometry
+		# 			@overlapping_changesets[this_changeset] << changeset_ids[index+offset]
+		# 		end
+		# 	end
+
+		# 	if (index%50).zero?
+		# 		print "#{index}."
+		# 	end
+		# end
+
+		num_overlaps = Array.new(changeset_geoms.length, 0)
+
 		changeset_geoms.each_with_index do |this_geometry, index|
 
-			this_changeset = changeset_ids[index]
+			changeset_geoms[index+1..-1].each_with_index do |conflict_geom, offset|
 
-			@overlapping_changesets[this_changeset] ||= []
-
-			changeset_geoms[index+1..-1].each_with_index do |conflict_geometry, offset|
-
-				if conflict_geometry.intersects? this_geometry
-					@overlapping_changesets[this_changeset] << changeset_ids[index+offset]
+				if this_geometry.intersects? conflict_geom
+					num_overlaps[index]+=1
 				end
 			end
 
@@ -69,6 +79,7 @@ class CalculateOverlaps
 			end
 		end
 
+		return num_overlaps
 
 	end
 
@@ -172,20 +183,25 @@ if $0 == __FILE__
 	dataset = ARGV[0]
 
 	if dataset.nil?
-		puts "Please specify a dataset"
+		puts "Please specify a dataset : (haiti | phil)"
 		exit()
 	end
 
-	overlaps = CalculateOverlaps.new(dataset)
-	
-	puts "Hitting Mongo for #{dataset}"
-	overlaps.hit_mongo(limit=nil)
+	puts "Dataset: #{dataset}"
+
+	overlaps = CalculateOverlaps.new(dataset, limit=nil)
 
 	#puts "Calculating User Overlaps"
 	#overlaps.calculate_overlaps_users
 
 	puts "Calculating Changeset Overlaps"
-	overlaps.calculate_overlaps_changesets
+	data = overlaps.calculate_overlaps_changesets
+
+	stats = DescriptiveStatistics::Stats.new(data) #Compact to remove nil values
+	puts "Mean Changeset Overlaps: #{stats.mean}"
+	puts "Median Changeset Overlaps: #{stats.median}"
+	puts "Mode Changeset Overlaps: #{stats.mode}"
+
 
 	#puts "Showing Results:"
 	#overlaps.user_overlaps.sort_by{|user,overlap| overlap.uniq.count}.reverse.each do |user, conflicts|
@@ -194,6 +210,6 @@ if $0 == __FILE__
 
 	#overlaps.graph_it
 	#overlaps.write_to_csv
-	overlaps.write_changeset_csv
+	#overlaps.write_changeset_csv
 end
 

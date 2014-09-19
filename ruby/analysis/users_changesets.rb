@@ -5,10 +5,10 @@ require 'time'
 require 'georuby'
 require 'geo_ruby/geojson'
 require 'geo_ruby/kml'
-require_relative 'write_geojson_featurecollection'
-require_relative 'kml_writer_helper'
 require 'rgeo'
 require 'rgeo/geo_json'
+
+require 'epic-geo'
 
 class UserWithChangesets
   '''Defining the characteristics of each dataset'''
